@@ -46,20 +46,20 @@
     <defaultWeb/>
     <nameField/>
     <validationScript/>
-    <id>
+    <pageID>
       <customDisplay/>
       <disabled>0</disabled>
       <hint/>
-      <name>id</name>
-      <number>1</number>
+      <name>pageID</name>
+      <number>2</number>
       <picker>1</picker>
-      <prettyName>id</prettyName>
+      <prettyName>pageID</prettyName>
       <size>30</size>
       <unmodifiable>0</unmodifiable>
       <validationMessage/>
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
-    </id>
+    </pageID>
   </class>
   <object>
     <name>URLShortener.Code.URLShortenerClass</name>

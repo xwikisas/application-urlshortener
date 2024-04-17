@@ -37,8 +37,8 @@
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
   <content>urlshortener.menu.button.title=Get shortened URL
-urlshortener.menu.copy.done=Copied to clipboard
-urlshortener.menu.create.fail=An error occurred while creating the shortened URL, probably due to insufficient rights.</content>
+urlshortener.menu.action.done=URL copied to clipboard
+urlshortener.menu.action.fail=An error occurred while creating the shortened URL.</content>
   <object>
     <name>URLShortener.Code.Translations</name>
     <number>0</number>

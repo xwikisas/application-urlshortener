@@ -126,49 +126,29 @@
     </property>
     <property>
       <code>define('urlshortener-messages', {
-  prefix: 'urlshortener.menu.',
+  prefix: 'urlshortener.menu.action.',
   keys: [
-    'copy.done',
-    'create.fail'
+    'done',
+    'fail'
   ]
 });
 
-require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($, meta, l10n) {
-  const computeShortenedURL = function(id) {
-    const origin = (new URL(window.location)).origin;
-    const shortenedURL = origin + '/rest/p/' + id;
-    navigator.clipboard.writeText(shortenedURL).then(() =&gt; {
-      new XWiki.widgets.Notification(l10n['copy.done'], 'info');
-    })
-  };
-
-  const createURLShortener = function() {
-    const params = {
-      'className': 'URLShortener.Code.URLShortenerClass',
-      'property#id': Math.random().toString(16).slice(2)
-    };
-    const postObjectURL = meta.restURL + '/objects?media=json';
-    $.post(postObjectURL, params).done(response =&gt; {
-      const id = response.properties.filter(x =&gt; x.name == 'id')[0].value;
-      computeShortenedURL(id);
-    }).fail(error =&gt; {
-      // This fails when current user has no edit rights. To discuss, should this be done from java without considering edit rights?
-      console.log(error);
-      new XWiki.widgets.Notification(l10n['create.fail'], 'error');
-    });
-  };
-
+require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($, xm, l10n) {
   $(document).on('click', '#shortenURL', function(e) {
     e.preventDefault();
-    const getObjectURL = meta.restURL + '/objects/URLShortener.Code.URLShortenerClass/0/properties/id?media=json';
-    // If the URLShortener object already exists, use the id value to construct the shortened URL.
-    // Otherwise, create the object.
-    $.getJSON(getObjectURL).done(response =&gt; {
-      computeShortenedURL(response.value);
+    const baseURL = (new URL(window.location)).origin + XWiki.contextPath + '/rest/p/';
+    const params = $.param({
+      'currentDocRef': XWiki.Model.serialize(xm.documentReference)
+    });
+    const computeIDURL = baseURL + 'create?' + params;
+    $.post(computeIDURL, params).done(response =&gt; {
+      const shortenedURL = baseURL + response.pageID;
+      navigator.clipboard.writeText(shortenedURL).then(() =&gt; {
+        new XWiki.widgets.Notification(l10n['done'], 'info');
+      })
     }).fail(error =&gt; {
-      if (error.status == 404) {
-        createURLShortener();
-      }
+      console.log(error);
+      new XWiki.widgets.Notification(l10n['fail'], 'error');
     });
   });
 });</code>
