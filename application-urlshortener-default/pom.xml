@@ -42,7 +42,7 @@
     </dependency>
     <dependency>
       <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-oldcore</artifactId>
+      <artifactId>xwiki-platform-search-solr-api</artifactId>
       <version>${platform.version}</version>
     </dependency>
     <dependency>

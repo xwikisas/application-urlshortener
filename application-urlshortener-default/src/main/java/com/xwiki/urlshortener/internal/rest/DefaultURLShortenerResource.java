@@ -20,7 +20,6 @@
 package com.xwiki.urlshortener.internal.rest;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,10 +32,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.EntityReference;
+import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.LocalDocumentReference;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
@@ -67,8 +72,13 @@ public class DefaultURLShortenerResource implements URLShortenerResource
     private QueryManager queryManager;
 
     @Inject
-    @Named("current")
     private DocumentReferenceResolver<String> documentReferenceResolver;
+
+    @Inject
+    private EntityReferenceResolver<String> referenceResolver;
+
+    @Inject
+    private EntityReferenceResolver<SolrDocument> solrEntityReferenceResolver;
 
     @Inject
     private ContextualAuthorizationManager authorization;
@@ -82,11 +92,12 @@ public class DefaultURLShortenerResource implements URLShortenerResource
     @Override
     public Response redirect(String pageID) throws Exception
     {
-        List<?> results = getURLShortenerObjectWithID(pageID);
-        if (!results.isEmpty()) {
-            DocumentReference documentReference = documentReferenceResolver.resolve((String) results.get(0));
+        SolrDocument result = getURLShortenerObjectWithID(pageID);
+        if (result != null) {
+            EntityReference docRef = solrEntityReferenceResolver.resolve(result, EntityType.DOCUMENT);
             XWikiContext xcontext = xcontextProvider.get();
-            String stringURL = xcontext.getWiki().getURL(documentReference, xcontext);
+            XWikiDocument doc = xcontext.getWiki().getDocument(docRef, xcontext);
+            String stringURL = doc.getURL("view", xcontext);
             // Let the redirect action to check the view right on the document.
             xcontext.getResponse().sendRedirect(stringURL);
 
@@ -145,20 +156,21 @@ public class DefaultURLShortenerResource implements URLShortenerResource
     {
         String id = UUID.randomUUID().toString().substring(0, 5);
         // Make sure the ID is not already used.
-        List<?> results = getURLShortenerObjectWithID(id);
-        if (!results.isEmpty()) {
+        if (getURLShortenerObjectWithID(id) != null) {
             id = createPageID();
         }
 
         return id;
     }
 
-    private List<?> getURLShortenerObjectWithID(String pageID) throws QueryException
+    private SolrDocument getURLShortenerObjectWithID(String pageID) throws QueryException
     {
-        String statement =
-            "select distinct doc.fullName from Document as doc, doc.object('URLShortener.Code.URLShortenerClass') as "
-                + "obj where obj.pageID = :pageID";
-        Query query = this.queryManager.createQuery(statement, Query.XWQL).bindValue(PAGE_ID, pageID);
-        return query.execute();
+        // This query needs to be done on all wikis.
+        String statement = "property.URLShortener.Code.URLShortenerClass.pageID:" + pageID;
+        Query query = this.queryManager.createQuery(statement, "solr");
+        QueryResponse response = (QueryResponse) query.execute().get(0);
+        SolrDocumentList results = response.getResults();
+
+        return results.isEmpty() ? null : results.get(0);
     }
 }
