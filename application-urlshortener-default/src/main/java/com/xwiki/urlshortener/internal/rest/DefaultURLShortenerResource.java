@@ -66,6 +66,9 @@ import com.xwiki.urlshortener.rest.URLShortenerResource;
 @Named("com.xwiki.urlshortener.internal.rest.DefaultURLShortenerResource")
 public class DefaultURLShortenerResource implements URLShortenerResource
 {
+    private static final LocalDocumentReference URL_SHORTENER_CLASS_REFERENCE =
+        new LocalDocumentReference(Arrays.asList("URLShortener", "Code"), "URLShortenerClass");
+
     private static final String PAGE_ID = "pageID";
 
     @Inject
@@ -73,9 +76,6 @@ public class DefaultURLShortenerResource implements URLShortenerResource
 
     @Inject
     private DocumentReferenceResolver<String> documentReferenceResolver;
-
-    @Inject
-    private EntityReferenceResolver<String> referenceResolver;
 
     @Inject
     private EntityReferenceResolver<SolrDocument> solrEntityReferenceResolver;
@@ -116,7 +116,7 @@ public class DefaultURLShortenerResource implements URLShortenerResource
         if (authorization.hasAccess(Right.VIEW, documentReference)) {
             XWikiDocument currentDoc = xcontext.getWiki().getDocument(documentReference, xcontext);
             String pageID = addURLShortenerXObject(currentDoc);
-            if (pageID == null) {
+            if (pageID == null || pageID.isEmpty()) {
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
 
@@ -129,14 +129,12 @@ public class DefaultURLShortenerResource implements URLShortenerResource
     private String addURLShortenerXObject(XWikiDocument currentDoc)
     {
         String pageID = null;
-        LocalDocumentReference urlShortenerClassReference =
-            new LocalDocumentReference(Arrays.asList("URLShortener", "Code"), "URLShortenerClass");
-        BaseObject urlShortenerObj = currentDoc.getXObject(urlShortenerClassReference);
+        BaseObject urlShortenerObj = currentDoc.getXObject(URL_SHORTENER_CLASS_REFERENCE);
 
         if (urlShortenerObj == null) {
             try {
                 XWikiContext xcontext = this.xcontextProvider.get();
-                BaseObject object = currentDoc.newXObject(urlShortenerClassReference, xcontext);
+                BaseObject object = currentDoc.newXObject(URL_SHORTENER_CLASS_REFERENCE, xcontext);
                 pageID = createPageID();
                 object.set(PAGE_ID, pageID, xcontext);
                 xcontext.getWiki().saveDocument(currentDoc, "Created URL Shortener.", xcontext);
