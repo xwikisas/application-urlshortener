@@ -134,7 +134,7 @@
 });
 
 require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($, xm, l10n) {
-  $(document).on('click', '#shortenURL', function(e) {
+  $(document).on('click', '#urlShortener', function(e) {
     e.preventDefault();
     const baseURL = (new URL(window.location)).origin + XWiki.contextPath + '/rest/p/';
     const params = $.param({
@@ -144,7 +144,7 @@ require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($
     $.post(computeIDURL, params).done(response =&gt; {
       const shortenedURL = baseURL + response.pageID;
       navigator.clipboard.writeText(shortenedURL).then(() =&gt; {
-        new XWiki.widgets.Notification(l10n['done'], 'info');
+        new XWiki.widgets.Notification(l10n['done'], 'done');
       })
     }).fail(error =&gt; {
       console.log(error);
@@ -294,7 +294,7 @@ require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($
 $xwiki.jsx.use('URLShortener.Code.UI')
 #template('menus_macros.vm')
 #set ($title = $escapetool.xml($services.localization.render('urlshortener.menu.button.title')))
-#submenuitem('', $title, 'shortenURL', '', 'link')
+#submenuitem('', $title, 'urlShortener', '', 'link')
 {{/html}}
 {{/velocity}}</content>
     </property>

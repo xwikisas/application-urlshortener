@@ -51,4 +51,12 @@
     <module>application-urlshortener-default</module>
     <module>application-urlshortener-ui</module>
   </modules>
+  <profiles>
+    <profile>
+      <id>integration-tests</id>
+      <modules>
+        <module>application-urlshortener-test</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>
