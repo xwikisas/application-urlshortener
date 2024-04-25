@@ -203,7 +203,7 @@ require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($
         <separators>|, </separators>
         <size>5</size>
         <unmodifiable>0</unmodifiable>
-        <values>action=Action|doc.reference=Document|doc.revision|icon.theme=Icon theme|locale=Language|rendering.defaultsyntax=Default syntax|rendering.restricted=Restricted|rendering.targetsyntax=Target syntax|request.base=Request base URL|request.cookies|request.headers|request.parameters=Request parameters|request.remoteAddr|request.session|request.url=Request URL|request.wiki=Request wiki|sheet|user=User|wiki=Wiki</values>
+        <values>action=Action|doc.reference=Document|icon.theme=Icon theme|locale=Language|rendering.defaultsyntax=Default syntax|rendering.restricted=Restricted|rendering.targetsyntax=Target syntax|request.base=Request base URL|request.cookies|request.headers|request.parameters=Request parameters|request.remoteAddr|request.url=Request URL|request.wiki=Request wiki|user=User|wiki=Wiki</values>
         <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
       </async_context>
       <async_enabled>
@@ -290,12 +290,15 @@ require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($
     </property>
     <property>
       <content>{{velocity}}
-{{html clean="false"}}
-$xwiki.jsx.use('URLShortener.Code.UI')
-#template('menus_macros.vm')
-#set ($title = $escapetool.xml($services.localization.render('urlshortener.menu.button.title')))
-#submenuitem('', $title, 'urlShortener', '', 'link')
-{{/html}}
+#if ($services.licensing.licensor.hasLicensureForEntity(
+    $services.model.createDocumentReference('', ['URLShortener', 'Code'], 'URLShortenerClass')))
+  {{html clean="false"}}
+  $xwiki.jsx.use('URLShortener.Code.UI')
+  #template('menus_macros.vm')
+  #set ($title = $escapetool.xml($services.localization.render('urlshortener.menu.button.title')))
+  #submenuitem('', $title, 'urlShortener', '', 'link')
+  {{/html}}
+#end
 {{/velocity}}</content>
     </property>
     <property>
