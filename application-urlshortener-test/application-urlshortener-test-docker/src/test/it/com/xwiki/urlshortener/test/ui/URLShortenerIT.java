@@ -19,14 +19,25 @@
  */
 package com.xwiki.urlshortener.test.ui;
 
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebElement;
+import org.xwiki.model.reference.LocalDocumentReference;
+import org.xwiki.model.reference.ObjectPropertyReference;
+import org.xwiki.model.reference.ObjectReference;
+import org.xwiki.rest.model.jaxb.Property;
+import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.TestReference;
 import org.xwiki.test.docker.junit5.UITest;
+import org.xwiki.test.docker.junit5.servletengine.ServletEngine;
+import org.xwiki.test.integration.XWikiExecutor;
 import org.xwiki.test.ui.TestUtils;
+import org.xwiki.test.ui.po.ViewPage;
+import org.xwiki.repository.test.SolrTestUtils;
 
 import com.xwiki.urlshortener.test.po.URLShortenerPage;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,7 +59,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class URLShortenerIT
 {
     @Test
-    void copyURLShortenerPresentWithAdmin(TestUtils testUtils, TestReference testReference)
+    void copyURLShortenerPresentWithAdmin(TestUtils testUtils, TestReference testReference,
+        TestConfiguration testConfiguration) throws Exception
     {
         testUtils.loginAsSuperAdmin();
         // By default the AdminGroup doesn't have "admin" right, so give it since we're going to create the Admin
@@ -57,7 +69,7 @@ class URLShortenerIT
         testUtils.createAdminUser();
         testUtils.loginAsAdmin();
 
-        testUtils.createPage(testReference, "");
+        testUtils.createPage(testReference, "First");
         URLShortenerPage page = new URLShortenerPage();
 
         WebElement urlShortenerButton = page.getURLShortenerButton();
@@ -65,14 +77,36 @@ class URLShortenerIT
 
         urlShortenerButton.click();
         assertFalse(page.isErrorNotificationDisplayed());
+
+        // Go to another page to check if redirect is working after.
+        LocalDocumentReference secondReference =
+            new LocalDocumentReference("Second", testReference.getLastSpaceReference());
+        ViewPage currentPage = testUtils.createPage(secondReference, "Second");
+        assertEquals("Second", currentPage.getContent());
+
+        System.out.println(computedHostURL(testConfiguration));
+        // Waits for Solr indexing to be completed.
+        new SolrTestUtils(testUtils, computedHostURL(testConfiguration)).waitEmpyQueue();
+
+        ObjectPropertyReference pageIDReference = new ObjectPropertyReference("pageID",
+            new ObjectReference("URLShortener.Code.URLShortenerClass[0]", testReference));
+        Property pageIDProperty = testUtils.rest().get(pageIDReference);
+        String pageID = pageIDProperty.getValue();
+
+        String pageURL = testUtils.getBaseURL() + String.format("rest/p/%s", pageID);
+        testUtils.getDriver().get(pageURL);
+
+        currentPage = new ViewPage();
+        assertEquals("First", currentPage.getContent());
     }
 
     @Test
-    void copyURLShortenerPresentWithSimpleUser(TestUtils testUtils, TestReference testReference)
+    void copyURLShortenerPresentWithSimpleUser(TestUtils testUtils, TestReference testReference,
+        TestConfiguration testConfiguration) throws Exception
     {
         testUtils.createUserAndLogin("alice", "pass");
 
-        testUtils.createPage(testReference, "");
+        testUtils.createPage(testReference, "First");
         URLShortenerPage page = new URLShortenerPage();
 
         WebElement urlShortenerButton = page.getURLShortenerButton();
@@ -80,5 +114,33 @@ class URLShortenerIT
 
         urlShortenerButton.click();
         assertFalse(page.isErrorNotificationDisplayed());
+
+        // Go to another page to check if redirect is working after.
+        LocalDocumentReference secondReference =
+            new LocalDocumentReference("Second", testReference.getLastSpaceReference());
+        ViewPage currentPage = testUtils.createPage(secondReference, "Second");
+        assertEquals("Second", currentPage.getContent());
+
+        System.out.println(computedHostURL(testConfiguration));
+        // Waits for Solr indexing to be completed.
+        new SolrTestUtils(testUtils, computedHostURL(testConfiguration)).waitEmpyQueue();
+
+        ObjectPropertyReference pageIDReference = new ObjectPropertyReference("pageID",
+            new ObjectReference("URLShortener.Code.URLShortenerClass[0]", testReference));
+        Property pageIDProperty = testUtils.rest().get(pageIDReference);
+        String pageID = pageIDProperty.getValue();
+
+        String pageURL = testUtils.getBaseURL() + String.format("rest/p/%s", pageID);
+        testUtils.getDriver().get(pageURL);
+
+        currentPage = new ViewPage();
+        assertEquals("First", currentPage.getContent());
+    }
+
+    private String computedHostURL(TestConfiguration testConfiguration)
+    {
+        ServletEngine servletEngine = testConfiguration.getServletEngine();
+        return String.format("http://%s:%d%s", servletEngine.getIP(), servletEngine.getPort(),
+            XWikiExecutor.DEFAULT_CONTEXT);
     }
 }
