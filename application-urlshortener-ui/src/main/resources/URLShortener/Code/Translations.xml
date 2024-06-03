@@ -38,7 +38,8 @@
   <hidden>true</hidden>
   <content>urlshortener.menu.button.title=Get shortened URL
 urlshortener.menu.action.done=URL copied to clipboard
-urlshortener.menu.action.fail=An error occurred while creating the shortened URL.</content>
+urlshortener.menu.action.fail=An error occurred while creating the shortened URL.
+urlshortener.menu.action.shortcut=Alt+u</content>
   <object>
     <name>URLShortener.Code.Translations</name>
     <number>0</number>
