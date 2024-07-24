@@ -136,13 +136,13 @@
 
 require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($, xm, l10n) {
   let createShortenedURL = function() {
-    const baseURL = (new URL(window.location)).origin + XWiki.contextPath + '/rest/p/';
+    const baseURL = (new URL(window.location)).origin + XWiki.contextPath;
     const params = $.param({
       'currentDocRef': XWiki.Model.serialize(xm.documentReference)
     });
-    const computeIDURL = baseURL + 'create?' + params;
+    const computeIDURL = baseURL + '/rest/p/create?' + params;
     $.post(computeIDURL, params).done(response =&gt; {
-      const shortenedURL = baseURL + response.pageID;
+      const shortenedURL = baseURL + '/p/' + response.pageID;
       navigator.clipboard.writeText(shortenedURL).then(() =&gt; {
         new XWiki.widgets.Notification(l10n['done'], 'done');
       })
