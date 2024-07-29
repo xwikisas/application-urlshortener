@@ -40,7 +40,7 @@ import org.xwiki.url.URLNormalizer;
  * @since 1.2
  */
 @Component
-@Named("p")
+@Named(URLShortenerResourceReference.HINT)
 @Singleton
 public class URLShortenerResourceReferenceSerializer
     implements ResourceReferenceSerializer<URLShortenerResourceReference, ExtendedURL>
@@ -54,7 +54,7 @@ public class URLShortenerResourceReferenceSerializer
         throws SerializeResourceReferenceException, UnsupportedResourceReferenceException
     {
         List<String> segments = new ArrayList<>();
-        segments.add("p");
+        segments.add(URLShortenerResourceReference.HINT);
         segments.add(resource.getPageId());
 
         ExtendedURL extendedURL = new ExtendedURL(segments);

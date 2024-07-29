@@ -52,11 +52,14 @@ import com.xpn.xwiki.XWikiContext;
  * @since 1.2
  */
 @Component
-@Named("p")
+@Named(URLShortenerResourceReference.HINT)
 @Singleton
 public class URLShortenerResourceReferenceHandler extends AbstractResourceReferenceHandler<ResourceType>
 {
-    private static final String PAGE_ID = "pageID";
+    /**
+     * Page ID.
+     */
+    public static final String PAGE_ID = "pageID";
 
     @Inject
     private QueryManager queryManager;

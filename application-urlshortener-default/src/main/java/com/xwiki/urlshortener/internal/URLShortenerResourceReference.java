@@ -33,9 +33,14 @@ import org.xwiki.resource.ResourceType;
 public class URLShortenerResourceReference extends AbstractResourceReference
 {
     /**
+     * The role hint to use for URL Shortener related resources.
+     */
+    public static final String HINT = "short";
+
+    /**
      * Represents a URL Shortener Resource Type.
      */
-    public static final ResourceType TYPE = new ResourceType("p");
+    public static final ResourceType TYPE = new ResourceType(HINT);
 
     private String pageId;
 

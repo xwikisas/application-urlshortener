@@ -68,7 +68,7 @@ public class URLShortenerResourceReferenceSerializerTest
         verify(extendedURLNormalizer, times(1)).normalize(any());
         List<String> segments = extendedURL.getSegments();
         assertEquals(2, segments.size());
-        assertEquals("p", segments.get(0));
+        assertEquals(URLShortenerResourceReference.HINT, segments.get(0));
         assertEquals(pageId, segments.get(1));
         assertTrue(extendedURL.getParameters().isEmpty());
     }

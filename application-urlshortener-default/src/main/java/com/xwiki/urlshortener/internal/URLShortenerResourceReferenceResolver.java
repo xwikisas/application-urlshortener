@@ -41,7 +41,7 @@ import org.xwiki.url.internal.AbstractResourceReferenceResolver;
  * @since 1.2
  */
 @Component
-@Named("p")
+@Named(URLShortenerResourceReference.HINT)
 @Singleton
 public class URLShortenerResourceReferenceResolver extends AbstractResourceReferenceResolver
 {
