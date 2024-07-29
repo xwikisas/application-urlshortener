@@ -66,7 +66,10 @@ import com.xwiki.urlshortener.rest.URLShortenerResource;
 @Named("com.xwiki.urlshortener.internal.rest.DefaultURLShortenerResource")
 public class DefaultURLShortenerResource implements URLShortenerResource
 {
-    private static final LocalDocumentReference URL_SHORTENER_CLASS_REFERENCE =
+    /**
+     * URL Shortener Class Reference.
+     */
+    public static final LocalDocumentReference URL_SHORTENER_CLASS_REFERENCE =
         new LocalDocumentReference(Arrays.asList("URLShortener", "Code"), "URLShortenerClass");
 
     private static final String PAGE_ID = "pageID";
