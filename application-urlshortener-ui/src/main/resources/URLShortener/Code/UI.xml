@@ -142,7 +142,9 @@ require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($
     });
     const computeIDURL = baseURL + '/rest/p/create?' + params;
     $.post(computeIDURL, params).done(response =&gt; {
-      const shortenedURL = baseURL + '/short/' + response.pageID;
+      // The wiki ID is needed only for subwikis, in order to be able to locate the resource after.
+      const wikiId = XWiki.currentWiki == XWiki.mainWiki ? '' : XWiki.currentWiki + '/';
+      const shortenedURL = baseURL + '/short/' + wikiId + response.pageID;
       navigator.clipboard.writeText(shortenedURL).then(() =&gt; {
         new XWiki.widgets.Notification(l10n['done'], 'done');
       })

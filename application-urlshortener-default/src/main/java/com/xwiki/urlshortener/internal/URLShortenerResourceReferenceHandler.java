@@ -45,8 +45,8 @@ import org.xwiki.resource.ResourceType;
 import com.xpn.xwiki.XWikiContext;
 
 /**
- * URL Resource Handler for redirecting from a shortened URL to the actual document, which is uniquely identified by
- * an ID.
+ * URL Resource Handler for redirecting from a shortened URL to the actual document, which is uniquely identified by an
+ * ID.
  *
  * @version $Id:$
  * @since 1.2
@@ -87,7 +87,7 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
             URLShortenerResourceReference urlResourceReference = (URLShortenerResourceReference) reference;
-            List<?> results = getURLShortenerObjectWithID(urlResourceReference.getPageId());
+            List<?> results = getURLShortenerObjectWithID(urlResourceReference);
             if (!results.isEmpty()) {
                 DocumentReference documentReference = documentReferenceResolver.resolve((String) results.get(0));
                 XWikiContext xcontext = xcontextProvider.get();
@@ -107,12 +107,18 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         chain.handleNext(reference);
     }
 
-    private List<?> getURLShortenerObjectWithID(String pageID) throws QueryException
+    private List<?> getURLShortenerObjectWithID(URLShortenerResourceReference resourceReference) throws QueryException
     {
         String statement =
             "select distinct doc.fullName from Document as doc, doc.object('URLShortener.Code.URLShortenerClass') as "
                 + "obj where obj.pageID = :pageID";
-        Query query = this.queryManager.createQuery(statement, Query.XWQL).bindValue(PAGE_ID, pageID);
+        Query query =
+            this.queryManager.createQuery(statement, Query.XWQL).bindValue(PAGE_ID, resourceReference.getPageId());
+        // An empty wiki means we are on the main wiki, which doesn't need to be set on the query because it's the
+        // default.
+        if (!resourceReference.getWikiId().isEmpty()) {
+            query = query.setWiki(resourceReference.getWikiId());
+        }
         return query.execute();
     }
 }

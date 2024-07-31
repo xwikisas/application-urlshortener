@@ -35,7 +35,10 @@ import org.xwiki.url.internal.AbstractResourceReferenceResolver;
 
 /**
  * Transforms a URLShortener URL into a typed Resource Reference. The URL format handled is
- * {@code http://server/context/p/pageId} (e.g. {@code http://localhost:8080/xwiki/p/12345}).
+ * {@code http://server/context/p/pageId} (e.g. {@code http://localhost:8080/xwiki/p/12345}) for the main wiki, and
+ * {@code http://server/context/p/wikiName/pageId} (e.g. {@code http://localhost:8080/xwiki/p/test/12345}) when it's
+ * on a subwiki. In order to keep the URL as short as possible, the wiki ID is not added on the URL when we are on the
+ * main wiki since it's not necessary for finding the associated document.
  *
  * @version $Id:$
  * @since 1.2
@@ -52,9 +55,19 @@ public class URLShortenerResourceReferenceResolver extends AbstractResourceRefer
         URLShortenerResourceReference reference;
         List<String> segments = extendedURL.getSegments();
 
-        if (!segments.isEmpty()) {
-            String pageId = segments.get(0);
-            reference = new URLShortenerResourceReference(pageId);
+        if (!segments.isEmpty() && segments.size() <= 2) {
+            String wikiId = "";
+            String pageId;
+            // The wiki name is added to the path only if we are not on the main wiki, in order to keep the URL as
+            // short as possible.
+            if (segments.size() == 2) {
+                wikiId = segments.get(0);
+                pageId = segments.get(1);
+            } else {
+                pageId = segments.get(0);
+            }
+
+            reference = new URLShortenerResourceReference(wikiId, pageId);
             copyParameters(extendedURL, reference);
         } else {
             throw new CreateResourceReferenceException(

@@ -21,7 +21,6 @@ package com.xwiki.urlshortener.internal;
 
 import java.util.List;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -59,10 +58,28 @@ public class URLShortenerResourceReferenceSerializerTest
     }
 
     @Test
-    void serialize() throws SerializeResourceReferenceException, UnsupportedResourceReferenceException
+    void serializeOnSubWiki() throws SerializeResourceReferenceException, UnsupportedResourceReferenceException
     {
         String pageId = "12345";
-        URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(pageId);
+        String wikiId = "wiki";
+        URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
+        ExtendedURL extendedURL = urlShortenerResourceReferenceSerializer.serialize(resourceReference);
+
+        verify(extendedURLNormalizer, times(1)).normalize(any());
+        List<String> segments = extendedURL.getSegments();
+        assertEquals(3, segments.size());
+        assertEquals(URLShortenerResourceReference.HINT, segments.get(0));
+        assertEquals(wikiId, segments.get(1));
+        assertEquals(pageId, segments.get(2));
+        assertTrue(extendedURL.getParameters().isEmpty());
+    }
+
+    @Test
+    void serializeOnMainWiki() throws SerializeResourceReferenceException, UnsupportedResourceReferenceException
+    {
+        String pageId = "12345";
+        String wikiId = "";
+        URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
         ExtendedURL extendedURL = urlShortenerResourceReferenceSerializer.serialize(resourceReference);
 
         verify(extendedURLNormalizer, times(1)).normalize(any());

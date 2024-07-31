@@ -44,13 +44,25 @@ public class URLShortenerResourceReference extends AbstractResourceReference
 
     private String pageId;
 
+    private String wikiId;
+
     /**
      * @param pageId see {@link #getPageId()}
+     * @param wikiId see {@link #getWikiId()}
      */
-    public URLShortenerResourceReference(String pageId)
+    public URLShortenerResourceReference(String wikiId, String pageId)
     {
         setType(TYPE);
+        this.wikiId = wikiId;
         this.pageId = pageId;
+    }
+
+    /**
+     * @return the id of the wiki where the document is located. Will be empty for the main wiki.
+     */
+    public String getWikiId()
+    {
+        return this.wikiId;
     }
 
     /**
@@ -66,6 +78,7 @@ public class URLShortenerResourceReference extends AbstractResourceReference
     {
         return new HashCodeBuilder(5, 5)
             .append(getType())
+            .append(getWikiId())
             .append(getPageId())
             .append(getParameters())
             .toHashCode();
@@ -85,6 +98,7 @@ public class URLShortenerResourceReference extends AbstractResourceReference
         }
         URLShortenerResourceReference obj = (URLShortenerResourceReference) object;
         return new EqualsBuilder()
+            .append(this.getWikiId(), obj.getWikiId())
             .append(this.getPageId(), obj.getPageId())
             .append(getType(), obj.getType())
             .append(getParameters(), obj.getParameters())

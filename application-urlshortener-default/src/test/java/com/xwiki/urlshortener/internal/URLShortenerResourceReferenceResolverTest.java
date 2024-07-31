@@ -21,6 +21,7 @@ package com.xwiki.urlshortener.internal;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.xwiki.resource.CreateResourceReferenceException;
@@ -30,6 +31,7 @@ import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.url.ExtendedURL;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ComponentTest
 public class URLShortenerResourceReferenceResolverTest
@@ -38,14 +40,43 @@ public class URLShortenerResourceReferenceResolverTest
     private URLShortenerResourceReferenceResolver resolver;
 
     @Test
-    void resolve() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
+    void resolveOnSubWiki() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
     {
         String pageId = "12345";
-        ExtendedURL extendedURL = new ExtendedURL(Collections.singletonList(pageId));
-        URLShortenerResourceReference expectedReference = new URLShortenerResourceReference(pageId);
+        String wikiId = "wiki";
+        ExtendedURL extendedURL = new ExtendedURL(Arrays.asList(wikiId, pageId));
+        URLShortenerResourceReference expectedReference = new URLShortenerResourceReference(wikiId, pageId);
 
-        URLShortenerResourceReference actualReference = (URLShortenerResourceReference) resolver.resolve(extendedURL,
-            URLShortenerResourceReference.TYPE, Collections.emptyMap());
+        URLShortenerResourceReference actualReference =
+            (URLShortenerResourceReference) resolver.resolve(extendedURL, URLShortenerResourceReference.TYPE,
+                Collections.emptyMap());
         assertEquals(expectedReference, actualReference);
+    }
+
+    @Test
+    void resolveOnMainWiki() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
+    {
+        String pageId = "12345";
+        String wikiId = "";
+        ExtendedURL extendedURL = new ExtendedURL(List.of(pageId));
+        URLShortenerResourceReference expectedReference = new URLShortenerResourceReference(wikiId, pageId);
+
+        URLShortenerResourceReference actualReference =
+            (URLShortenerResourceReference) resolver.resolve(extendedURL, URLShortenerResourceReference.TYPE,
+                Collections.emptyMap());
+        assertEquals(expectedReference, actualReference);
+    }
+
+    @Test
+    void resolveWithException() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
+    {
+        String pageId = "12345";
+        String wikiId = "wiki";
+        ExtendedURL wrongResourceURL = new ExtendedURL(Arrays.asList(wikiId, "test", pageId));
+
+        CreateResourceReferenceException exception = assertThrows(CreateResourceReferenceException.class,
+            () -> resolver.resolve(wrongResourceURL, URLShortenerResourceReference.TYPE, Collections.emptyMap()));
+        assertEquals(String.format("Invalid URL Shortener Resource format: [%s]", wrongResourceURL),
+            exception.getMessage());
     }
 }

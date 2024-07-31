@@ -55,6 +55,9 @@ public class URLShortenerResourceReferenceSerializer
     {
         List<String> segments = new ArrayList<>();
         segments.add(URLShortenerResourceReference.HINT);
+        if (!resource.getWikiId().isEmpty()) {
+            segments.add(resource.getWikiId());
+        }
         segments.add(resource.getPageId());
 
         ExtendedURL extendedURL = new ExtendedURL(segments);
