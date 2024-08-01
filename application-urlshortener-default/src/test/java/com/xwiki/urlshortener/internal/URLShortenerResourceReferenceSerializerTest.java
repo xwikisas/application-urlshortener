@@ -61,7 +61,7 @@ public class URLShortenerResourceReferenceSerializerTest
     void serializeOnSubWiki() throws SerializeResourceReferenceException, UnsupportedResourceReferenceException
     {
         String pageId = "12345";
-        String wikiId = "wiki";
+        String wikiId = "test";
         URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
         ExtendedURL extendedURL = urlShortenerResourceReferenceSerializer.serialize(resourceReference);
 

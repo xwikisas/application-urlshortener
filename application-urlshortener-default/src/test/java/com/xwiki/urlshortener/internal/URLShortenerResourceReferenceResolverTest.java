@@ -43,7 +43,7 @@ public class URLShortenerResourceReferenceResolverTest
     void resolveOnSubWiki() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
     {
         String pageId = "12345";
-        String wikiId = "wiki";
+        String wikiId = "test";
         ExtendedURL extendedURL = new ExtendedURL(Arrays.asList(wikiId, pageId));
         URLShortenerResourceReference expectedReference = new URLShortenerResourceReference(wikiId, pageId);
 
@@ -71,7 +71,7 @@ public class URLShortenerResourceReferenceResolverTest
     void resolveWithException() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
     {
         String pageId = "12345";
-        String wikiId = "wiki";
+        String wikiId = "test";
         ExtendedURL wrongResourceURL = new ExtendedURL(Arrays.asList(wikiId, "test", pageId));
 
         CreateResourceReferenceException exception = assertThrows(CreateResourceReferenceException.class,

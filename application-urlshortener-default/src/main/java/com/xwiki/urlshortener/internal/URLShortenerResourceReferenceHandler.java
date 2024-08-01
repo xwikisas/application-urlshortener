@@ -33,6 +33,7 @@ import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
@@ -90,6 +91,10 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
             List<?> results = getURLShortenerObjectWithID(urlResourceReference);
             if (!results.isEmpty()) {
                 DocumentReference documentReference = documentReferenceResolver.resolve((String) results.get(0));
+                if (!urlResourceReference.getWikiId().isEmpty()) {
+                    documentReference =
+                        documentReference.setWikiReference(new WikiReference(urlResourceReference.getWikiId()));
+                }
                 XWikiContext xcontext = xcontextProvider.get();
                 String stringURL = xcontext.getWiki().getURL(documentReference, xcontext);
 

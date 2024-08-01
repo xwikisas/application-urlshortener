@@ -109,12 +109,12 @@ public class URLShortenerResourceReferenceHandlerTest
     void handleWithQueryResultsOnSubWiki() throws Exception
     {
         String pageId = "123";
-        String wikiId = "wiki";
+        String wikiId = "test";
 
         when(queryManager.createQuery(any(String.class), eq(Query.XWQL))).thenReturn(query);
         when(query.bindValue(URLShortenerResourceReferenceHandler.PAGE_ID, pageId)).thenReturn(query);
         when(query.setWiki(wikiId)).thenReturn(query);
-        String docRef = "wiki.Space.Page";
+        String docRef = "test.Space.Page";
         DocumentReference documentReference = new DocumentReference(wikiId, "Space", "Page");
         when(documentReferenceResolver.resolve(docRef)).thenReturn(documentReference);
         when(query.execute()).thenReturn(Collections.singletonList(docRef));
@@ -157,7 +157,7 @@ public class URLShortenerResourceReferenceHandlerTest
     void handleWithoutQueryResults() throws Exception
     {
         String pageId = "123";
-        String wikiId = "wiki";
+        String wikiId = "test";
 
         when(queryManager.createQuery(any(String.class), eq(Query.XWQL))).thenReturn(query);
         when(query.bindValue(URLShortenerResourceReferenceHandler.PAGE_ID, pageId)).thenReturn(query);
@@ -177,7 +177,7 @@ public class URLShortenerResourceReferenceHandlerTest
     void handleWithException() throws Exception
     {
         String pageId = "123";
-        String wikiId = "wiki";
+        String wikiId = "test";
 
         when(queryManager.createQuery(any(String.class), eq(Query.XWQL))).thenThrow(
             new QueryException("Error", null, null));
