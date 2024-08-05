@@ -1,2 +1,5 @@
 com.xwiki.urlshortener.internal.rest.DefaultURLShortenerResource
+com.xwiki.urlshortener.internal.URLShortenerResourceReferenceHandler
+com.xwiki.urlshortener.internal.URLShortenerResourceReferenceResolver
+com.xwiki.urlshortener.internal.URLShortenerResourceReferenceSerializer
 com.xwiki.urlshortener.internal.URLShortenerEventListener

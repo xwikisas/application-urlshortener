@@ -30,8 +30,9 @@ import org.xwiki.rest.XWikiRestComponent;
 import org.xwiki.stability.Unstable;
 
 /**
- * Provides APIs for redirecting from a shortened URL to the actual document, along with what is needed for creating the
- * needed ID.
+ * Provides APIs for associating an ID to a XWiki document. It also provides API for redirecting a shortened URL to the
+ * actual document, but this is kept only for backwards compatibility of old links, since links are now redirected using
+ * {@code URLShortenerResourceReferenceHandler}.
  *
  * @version $Id$
  * @since 1.0
@@ -47,9 +48,12 @@ public interface URLShortenerResource extends XWikiRestComponent
      * @param pageID the ID used to identify a XWiki page
      * @return the response
      * @throws Exception if there is no page associated to the given ID
+     * @deprecated this was kept in order to not break existing links, but the
+     *     {@code URLShortenerResourceReferenceHandler} should be used for redirecting shortened URLs
      */
     @GET
     @Path("/{id}")
+    @Deprecated
     Response redirect(@PathParam("id") String pageID) throws Exception;
 
     /**
@@ -58,7 +62,7 @@ public interface URLShortenerResource extends XWikiRestComponent
      *
      * @param currentDocRef current document reference, as {@code String}
      * @return the created or found ID for the given document
-     * @throws Exception if a error occurs while creating and saving the ID
+     * @throws Exception if an error occurs while creating and saving the ID
      */
     @POST
     @Path("/create")
