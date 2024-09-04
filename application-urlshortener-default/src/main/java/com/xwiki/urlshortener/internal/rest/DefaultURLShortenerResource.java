@@ -48,8 +48,6 @@ import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
 import org.xwiki.security.authorization.ContextualAuthorizationManager;
 import org.xwiki.security.authorization.Right;
-import org.xwiki.user.CurrentUserReference;
-import org.xwiki.user.UserReferenceResolver;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
@@ -90,9 +88,6 @@ public class DefaultURLShortenerResource implements URLShortenerResource
 
     @Inject
     private Provider<XWikiContext> xcontextProvider;
-
-    @Inject
-    private UserReferenceResolver<CurrentUserReference> currentUserResolver;
 
     @Inject
     private Logger logger;
@@ -146,9 +141,11 @@ public class DefaultURLShortenerResource implements URLShortenerResource
                 pageID = createPageID();
                 object.set(PAGE_ID, pageID, xcontext);
 
-                currentDoc.getAuthors()
-                    .setOriginalMetadataAuthor(currentUserResolver.resolve(CurrentUserReference.INSTANCE));
-                xcontext.getWiki().saveDocument(currentDoc, "Created URL Shortener.", xcontext);
+                // Don't create a history entry.
+                currentDoc.setMetaDataDirty(false);
+                currentDoc.setContentDirty(false);
+
+                xcontext.getWiki().saveDocument(currentDoc, "Created URL Shortener.", true, xcontext);
             } catch (XWikiException | QueryException e) {
                 this.logger.error(
                     String.format("Error while computing the shortened URL for document [%s]. Root cause: [%s]",

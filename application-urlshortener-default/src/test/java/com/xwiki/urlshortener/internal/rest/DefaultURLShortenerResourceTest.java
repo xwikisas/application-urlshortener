@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
 import org.xwiki.model.EntityType;
-import org.xwiki.model.document.DocumentAuthors;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReference;
@@ -50,9 +49,6 @@ import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
-import org.xwiki.user.CurrentUserReference;
-import org.xwiki.user.UserReference;
-import org.xwiki.user.UserReferenceResolver;
 
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
@@ -109,9 +105,6 @@ public class DefaultURLShortenerResourceTest
     @MockComponent
     private Provider<XWikiContext> xcontextProvider;
 
-    @MockComponent
-    private UserReferenceResolver<CurrentUserReference> currentUserResolver;
-
     @Mock
     private Query query;
 
@@ -128,12 +121,6 @@ public class DefaultURLShortenerResourceTest
     private XWikiDocument document;
 
     @Mock
-    private DocumentAuthors authors;
-
-    @Mock
-    private UserReference userReference;
-
-    @Mock
     private XWikiResponse xwikiResponse;
 
     @Mock
@@ -144,8 +131,6 @@ public class DefaultURLShortenerResourceTest
     {
         when(xcontextProvider.get()).thenReturn(xcontext);
         when(xcontext.getWiki()).thenReturn(xwiki);
-
-        when(currentUserResolver.resolve(CurrentUserReference.INSTANCE)).thenReturn(userReference);
     }
 
     /**
@@ -233,12 +218,9 @@ public class DefaultURLShortenerResourceTest
         when(query.execute()).thenReturn(Collections.singletonList(queryResponse));
         when(queryResponse.getResults()).thenReturn(solrDocumentList);
 
-        when(document.getAuthors()).thenReturn(authors);
-
         this.urlShortenerResource.createShortenedURL(currentDocRefStr);
 
-        verify(xwiki).saveDocument(document, "Created URL Shortener.", xcontext);
-        verify(authors).setOriginalMetadataAuthor(userReference);
+        verify(xwiki).saveDocument(document, "Created URL Shortener.", true, xcontext);
         verify(object).set(eq(PAGE_ID), any(String.class), eq(xcontext));
     }
 
