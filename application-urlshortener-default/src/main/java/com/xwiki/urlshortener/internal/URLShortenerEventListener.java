@@ -76,6 +76,13 @@ public class URLShortenerEventListener extends AbstractEventListener
             XWikiDocument targetDoc = xcontext.getWiki().getDocument(copyEvent.getTargetReference(), xcontext);
             if (targetDoc.getXObject(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE) != null) {
                 targetDoc.removeXObjects(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE);
+
+                // Don't create a history entry.
+                targetDoc.setMetaDataDirty(false);
+                targetDoc.setContentDirty(false);
+                xcontext.getWiki()
+                    .saveDocument(targetDoc, "Removed the URL Shortener object specific to the source page.", true,
+                        xcontext);
             }
         } catch (XWikiException e) {
             logger.warn("Failed to check copied document for an associated shortened URL. This could lead to problems "
