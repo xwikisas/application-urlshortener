@@ -26,7 +26,9 @@ import javax.inject.Singleton;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
+import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 import org.xwiki.refactoring.event.DocumentCopiedEvent;
@@ -38,7 +40,8 @@ import com.xwiki.urlshortener.internal.rest.DefaultURLShortenerResource;
 
 /**
  * Listener to make sure copied documents do not copy also the URLShortener object, which would mean 2 documents have
- * the same ID associated.
+ * the same ID associated. We also listen to DocumentCreatedEvent, since documents could be created from templates which
+ * had the URLShortener object added.
  *
  * @version $Id$
  * @since 1.1.1
@@ -64,16 +67,17 @@ public class URLShortenerEventListener extends AbstractEventListener
      */
     public URLShortenerEventListener()
     {
-        super(NAME, new DocumentCopiedEvent());
+        super(NAME, new DocumentCopiedEvent(), new DocumentCreatedEvent());
     }
 
     @Override
     public void onEvent(Event event, Object source, Object data)
     {
         XWikiContext xcontext = xcontextProvider.get();
-        DocumentCopiedEvent copyEvent = (DocumentCopiedEvent) event;
+
         try {
-            XWikiDocument targetDoc = xcontext.getWiki().getDocument(copyEvent.getTargetReference(), xcontext);
+            XWikiDocument targetDoc = xcontext.getWiki().getDocument(getDocumentReference(event), xcontext);
+
             if (targetDoc.getXObject(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE) != null) {
                 targetDoc.removeXObjects(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE);
 
@@ -88,6 +92,17 @@ public class URLShortenerEventListener extends AbstractEventListener
             logger.warn("Failed to check copied document for an associated shortened URL. This could lead to problems "
                     + "when associating a shortened URL for the new document. Root cause: [{}]",
                 ExceptionUtils.getRootCauseMessage(e));
+        }
+    }
+
+    private DocumentReference getDocumentReference(Event event)
+    {
+        if (event instanceof DocumentCreatedEvent) {
+            DocumentCreatedEvent createdEvent = (DocumentCreatedEvent) event;
+            return createdEvent.getDocumentReference();
+        } else {
+            DocumentCopiedEvent copyEvent = (DocumentCopiedEvent) event;
+            return copyEvent.getTargetReference();
         }
     }
 }

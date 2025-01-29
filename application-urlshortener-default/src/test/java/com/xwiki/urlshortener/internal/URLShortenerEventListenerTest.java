@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
+import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.refactoring.event.DocumentCopiedEvent;
 import org.xwiki.test.LogLevel;
@@ -89,13 +90,28 @@ public class URLShortenerEventListenerTest
     }
 
     @Test
-    void onEventWithObject() throws Exception
+    void onEventCopyWithObject() throws Exception
     {
         DocumentReference sourceRef = new DocumentReference("wiki", "Space", "Test1");
         DocumentReference targetRef = new DocumentReference("wiki", "Space", "Test2");
         DocumentCopiedEvent event = new DocumentCopiedEvent(sourceRef, targetRef);
 
         when(xwiki.getDocument(targetRef, xcontext)).thenReturn(targetDoc);
+        when(targetDoc.getXObject(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE)).thenReturn(
+            new BaseObject());
+
+        eventListener.onEvent(event, null, null);
+
+        verify(targetDoc, times(1)).removeXObjects(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE);
+    }
+
+    @Test
+    void onEventCreatedWithObject() throws Exception
+    {
+        DocumentReference docRef = new DocumentReference("wiki", "Space", "Test1");
+        DocumentCreatedEvent event = new DocumentCreatedEvent(docRef);
+
+        when(xwiki.getDocument(docRef, xcontext)).thenReturn(targetDoc);
         when(targetDoc.getXObject(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE)).thenReturn(
             new BaseObject());
 
