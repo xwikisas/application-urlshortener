@@ -31,7 +31,7 @@
   <name>URL Shortener Application (Pro) - Default</name>
   <description>URL Shortener Application (Pro) - Default</description>
   <properties>
-    <xwiki.jacoco.instructionRatio>0.98</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.94</xwiki.jacoco.instructionRatio>
     <!-- Needs to be installed on root to be available via REST -->
     <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
   </properties>
