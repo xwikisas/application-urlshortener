@@ -30,8 +30,10 @@ import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.AbstractEventListener;
+import org.xwiki.observation.ObservationContext;
 import org.xwiki.observation.event.Event;
 import org.xwiki.refactoring.event.DocumentCopiedEvent;
+import org.xwiki.refactoring.event.DocumentRenamingEvent;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
@@ -56,11 +58,16 @@ public class URLShortenerEventListener extends AbstractEventListener
      */
     public static final String NAME = "URLShortenerEventListener";
 
+    private static final DocumentRenamingEvent DOCUMENT_RENAMING_EVENT = new DocumentRenamingEvent();
+
     @Inject
     private Provider<XWikiContext> xcontextProvider;
 
     @Inject
     private Logger logger;
+
+    @Inject
+    private ObservationContext observationContext;
 
     /**
      * Default constructor.
@@ -78,7 +85,8 @@ public class URLShortenerEventListener extends AbstractEventListener
         try {
             XWikiDocument targetDoc = xcontext.getWiki().getDocument(getDocumentReference(event), xcontext);
 
-            if (targetDoc.getXObject(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE) != null) {
+            if (!observationContext.isIn(DOCUMENT_RENAMING_EVENT)
+                && targetDoc.getXObject(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE) != null) {
                 targetDoc.removeXObjects(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE);
 
                 // Don't create a history entry.

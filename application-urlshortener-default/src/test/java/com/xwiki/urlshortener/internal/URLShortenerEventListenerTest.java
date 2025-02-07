@@ -25,9 +25,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.observation.ObservationContext;
 import org.xwiki.refactoring.event.DocumentCopiedEvent;
+import org.xwiki.refactoring.event.DocumentRenamingEvent;
 import org.xwiki.test.LogLevel;
 import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -55,6 +58,9 @@ public class URLShortenerEventListenerTest
     @MockComponent
     private Provider<XWikiContext> xcontextProvider;
 
+    @MockComponent
+    private ObservationContext observationContext;
+
     @RegisterExtension
     private LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.WARN);
 
@@ -72,6 +78,7 @@ public class URLShortenerEventListenerTest
     {
         when(xcontextProvider.get()).thenReturn(xcontext);
         when(xcontext.getWiki()).thenReturn(xwiki);
+        when(observationContext.isIn(new DocumentRenamingEvent())).thenReturn(false);
     }
 
     @Test
@@ -103,6 +110,24 @@ public class URLShortenerEventListenerTest
         eventListener.onEvent(event, null, null);
 
         verify(targetDoc, times(1)).removeXObjects(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE);
+    }
+
+    @Test
+    void onEventRenamedWithObject() throws Exception
+    {
+        DocumentReference sourceRef = new DocumentReference("wiki", "Space", "Test1");
+        DocumentReference targetRef = new DocumentReference("wiki", "Space", "Test2");
+        DocumentCopiedEvent event = new DocumentCopiedEvent(sourceRef, targetRef);
+        Mockito.reset(observationContext);
+        when(observationContext.isIn(new DocumentRenamingEvent())).thenReturn(true);
+
+        when(xwiki.getDocument(targetRef, xcontext)).thenReturn(targetDoc);
+        when(targetDoc.getXObject(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE)).thenReturn(
+            new BaseObject());
+
+        eventListener.onEvent(event, null, null);
+
+        verify(targetDoc, times(0)).removeXObjects(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE);
     }
 
     @Test
