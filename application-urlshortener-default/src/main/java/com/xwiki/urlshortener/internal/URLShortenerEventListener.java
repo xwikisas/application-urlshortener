@@ -58,8 +58,6 @@ public class URLShortenerEventListener extends AbstractEventListener
      */
     public static final String NAME = "URLShortenerEventListener";
 
-    private static final DocumentRenamingEvent DOCUMENT_RENAMING_EVENT = new DocumentRenamingEvent();
-
     @Inject
     private Provider<XWikiContext> xcontextProvider;
 
@@ -85,7 +83,7 @@ public class URLShortenerEventListener extends AbstractEventListener
         try {
             XWikiDocument targetDoc = xcontext.getWiki().getDocument(getDocumentReference(event), xcontext);
 
-            if (!observationContext.isIn(DOCUMENT_RENAMING_EVENT)
+            if (!observationContext.isIn(new DocumentRenamingEvent())
                 && targetDoc.getXObject(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE) != null) {
                 targetDoc.removeXObjects(DefaultURLShortenerResource.URL_SHORTENER_CLASS_REFERENCE);
 
