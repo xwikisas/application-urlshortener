@@ -29,7 +29,7 @@
   </parent>
   <groupId>com.xwiki.urlshortener</groupId>
   <artifactId>application-urlshortener</artifactId>
-  <version>1.2.3-SNAPSHOT</version>
+  <version>1.2.3</version>
   <packaging>pom</packaging>
   <name>URL Shortener Application (Pro) Parent POM</name>
   <description>URL Shortener</description>
@@ -44,7 +44,7 @@
     <connection>scm:git:git://github.com/xwikisas/application-urlshortener.git</connection>
     <developerConnection>scm:git:git@github.com:xwikisas/application-urlshortener.git</developerConnection>
     <url>https://github.com/xwikisas/application-urlshortener/tree/main</url>
-    <tag>HEAD</tag>
+    <tag>application-urlshortener-1.2.3</tag>
   </scm>
   <modules>
     <module>application-urlshortener-api</module>
