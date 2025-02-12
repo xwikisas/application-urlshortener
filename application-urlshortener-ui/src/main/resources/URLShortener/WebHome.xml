@@ -36,5 +36,5 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content/>
+  <content>{{liveData id="shorturls" properties="doc.name,doc.location,pageID,_actions" showPageSizeDropdown="true" sort="pageID:asc" source="liveTable" sourceParameters="translationPrefix=urlshortener.livedata.&amp;className=URLShortener.Code.URLShortenerClass"}}{{/liveData}}</content>
 </xwikidoc>
