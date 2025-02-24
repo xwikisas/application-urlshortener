@@ -116,6 +116,11 @@ public class DefaultURLShortenerResource implements URLShortenerResource
 
         XWikiContext xcontext = xcontextProvider.get();
         DocumentReference documentReference = documentReferenceResolver.resolve(currentDocRef);
+
+        if (!xcontext.getWiki().exists(documentReference, xcontext)) {
+            return Response.status(Response.Status.NOT_FOUND).type(MediaType.APPLICATION_JSON).build();
+        }
+
         if (authorization.hasAccess(Right.VIEW, documentReference)) {
             XWikiDocument currentDoc = xcontext.getWiki().getDocument(documentReference, xcontext);
             String pageID = addURLShortenerXObject(currentDoc);
