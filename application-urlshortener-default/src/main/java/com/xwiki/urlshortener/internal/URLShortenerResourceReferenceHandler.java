@@ -21,6 +21,7 @@ package com.xwiki.urlshortener.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -42,6 +43,8 @@ import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.client.solrj.response.QueryResponse;
 
 import com.xpn.xwiki.XWikiContext;
 
@@ -124,6 +127,20 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         if (!resourceReference.getWikiId().isEmpty()) {
             query = query.setWiki(resourceReference.getWikiId());
         }
-        return query.execute();
+
+        List<?> queryResults = query.execute();
+
+        if (queryResults.isEmpty()) {
+            // If no short url is found on the given subwiki, try to find the pageID in all subwikis.
+            // Note that the query is very slow when solr is reindexing.
+            statement = "property.URLShortener.Code.URLShortenerClass.pageID:" + resourceReference.getPageId();
+            query = this.queryManager.createQuery(statement, "solr");
+            QueryResponse response = (QueryResponse) query.execute().get(0);
+            queryResults = response.getResults().stream().map(
+                    // Get document reference without the locale part (which would lead to an inexistent page).
+                    (SolrDocument doc) -> doc.getFieldValue("wiki").toString() + ":" + doc.getFieldValue("fullname"))
+                .collect(Collectors.toList());
+        }
+        return queryResults;
     }
 }
