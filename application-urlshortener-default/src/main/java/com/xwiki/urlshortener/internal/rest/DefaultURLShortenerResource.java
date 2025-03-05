@@ -32,6 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -177,8 +178,9 @@ public class DefaultURLShortenerResource implements URLShortenerResource
     private SolrDocument getURLShortenerObjectWithID(String pageID) throws QueryException
     {
         // This query needs to be done on all wikis.
-        String statement = "property.URLShortener.Code.URLShortenerClass.pageID:" + pageID;
-        Query query = this.queryManager.createQuery(statement, "solr");
+        String statement =
+            "property.URLShortener.Code.URLShortenerClass.pageID:" + ClientUtils.escapeQueryChars(pageID);
+        Query query = this.queryManager.createQuery(statement, "solr").setLimit(1);
         QueryResponse response = (QueryResponse) query.execute().get(0);
         SolrDocumentList results = response.getResults();
 

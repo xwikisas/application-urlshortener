@@ -29,6 +29,9 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.util.ClientUtils;
+import org.apache.solr.common.SolrDocument;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletResponse;
@@ -43,8 +46,6 @@ import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.client.solrj.response.QueryResponse;
 
 import com.xpn.xwiki.XWikiContext;
 
@@ -71,6 +72,9 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
     @Inject
     @Named("current")
     private DocumentReferenceResolver<String> documentReferenceResolver;
+
+    @Inject
+    private DocumentReferenceResolver<SolrDocument> solrDocumentReferenceResolver;
 
     @Inject
     private Provider<XWikiContext> xcontextProvider;
@@ -121,7 +125,8 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
             "select distinct doc.fullName from Document as doc, doc.object('URLShortener.Code.URLShortenerClass') as "
                 + "obj where obj.pageID = :pageID";
         Query query =
-            this.queryManager.createQuery(statement, Query.XWQL).bindValue(PAGE_ID, resourceReference.getPageId());
+            this.queryManager.createQuery(statement, Query.XWQL).bindValue(PAGE_ID, resourceReference.getPageId())
+                .setLimit(1);
         // An empty wiki means we are on the main wiki, which doesn't need to be set on the query because it's the
         // default.
         if (!resourceReference.getWikiId().isEmpty()) {
@@ -133,12 +138,13 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         if (queryResults.isEmpty()) {
             // If no short url is found on the given subwiki, try to find the pageID in all subwikis.
             // Note that the query is very slow when solr is reindexing.
-            statement = "property.URLShortener.Code.URLShortenerClass.pageID:" + resourceReference.getPageId();
-            query = this.queryManager.createQuery(statement, "solr");
+            statement = "property.URLShortener.Code.URLShortenerClass.pageID:" + ClientUtils.escapeQueryChars(
+                resourceReference.getPageId());
+            query = this.queryManager.createQuery(statement, "solr").setLimit(1);
             QueryResponse response = (QueryResponse) query.execute().get(0);
             queryResults = response.getResults().stream().map(
                     // Get document reference without the locale part (which would lead to an inexistent page).
-                    (SolrDocument doc) -> doc.getFieldValue("wiki").toString() + ":" + doc.getFieldValue("fullname"))
+                    (SolrDocument doc) -> solrDocumentReferenceResolver.resolve(doc).toString())
                 .collect(Collectors.toList());
         }
         return queryResults;

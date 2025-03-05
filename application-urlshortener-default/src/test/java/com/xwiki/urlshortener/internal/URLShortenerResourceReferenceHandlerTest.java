@@ -53,6 +53,7 @@ import com.xpn.xwiki.XWikiContext;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -122,6 +123,7 @@ public class URLShortenerResourceReferenceHandlerTest
 
         when(queryManager.createQuery(any(String.class), eq(Query.XWQL))).thenReturn(query);
         when(query.bindValue(URLShortenerResourceReferenceHandler.PAGE_ID, pageId)).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.setWiki(wikiId)).thenReturn(query);
         String docRef = "test.Space.Page";
         DocumentReference documentReference = new DocumentReference(wikiId, "Space", "Page");
@@ -146,6 +148,7 @@ public class URLShortenerResourceReferenceHandlerTest
 
         when(queryManager.createQuery(any(String.class), eq(Query.XWQL))).thenReturn(query);
         when(query.bindValue(URLShortenerResourceReferenceHandler.PAGE_ID, pageId)).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         String docRef = "wiki.Space.Page";
         DocumentReference documentReference = new DocumentReference("wiki", "Space", "Page");
         when(documentReferenceResolver.resolve(docRef)).thenReturn(documentReference);
@@ -170,9 +173,11 @@ public class URLShortenerResourceReferenceHandlerTest
 
         when(queryManager.createQuery(any(String.class), eq(Query.XWQL))).thenReturn(query);
         when(query.bindValue(URLShortenerResourceReferenceHandler.PAGE_ID, pageId)).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.setWiki(wikiId)).thenReturn(query);
         when(query.execute()).thenReturn(Collections.emptyList());
         when(queryManager.createQuery(any(String.class), eq("solr"))).thenReturn(solrQuery);
+        when(solrQuery.setLimit(anyInt())).thenReturn(solrQuery);
         when(solrQuery.execute()).thenReturn(List.of(solrResponse));
         when(solrResponse.getResults()).thenReturn(new SolrDocumentList());
 
