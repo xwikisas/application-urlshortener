@@ -37,6 +37,7 @@ import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
@@ -80,6 +81,9 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
     private Provider<XWikiContext> xcontextProvider;
 
     @Inject
+    private EntityReferenceSerializer<String> serializer;
+
+    @Inject
     private Container container;
 
     @Override
@@ -95,13 +99,24 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
             URLShortenerResourceReference urlResourceReference = (URLShortenerResourceReference) reference;
+            DocumentReference documentReference = null;
             List<?> results = getURLShortenerObjectWithID(urlResourceReference);
+
             if (!results.isEmpty()) {
-                DocumentReference documentReference = documentReferenceResolver.resolve((String) results.get(0));
+                documentReference = documentReferenceResolver.resolve((String) results.get(0));
                 if (!urlResourceReference.getWikiId().isEmpty()) {
                     documentReference =
                         documentReference.setWikiReference(new WikiReference(urlResourceReference.getWikiId()));
                 }
+            } else {
+                // If no short url is found on the given subwiki, try to find the pageID in all subwikis.
+                results = getURLShortenerObjectWithIDAnyWiki(urlResourceReference);
+                if (!results.isEmpty()) {
+                    documentReference = documentReferenceResolver.resolve((String) results.get(0));
+                }
+            }
+
+            if (null != documentReference) {
                 XWikiContext xcontext = xcontextProvider.get();
                 String stringURL = xcontext.getWiki().getURL(documentReference, xcontext);
 
@@ -119,6 +134,20 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         chain.handleNext(reference);
     }
 
+    private List<?> getURLShortenerObjectWithIDAnyWiki(URLShortenerResourceReference resourceReference)
+        throws QueryException
+    {
+        // Note that the query is very slow when solr is reindexing.
+        String statement = "property.URLShortener.Code.URLShortenerClass.pageID:" + ClientUtils.escapeQueryChars(
+            resourceReference.getPageId());
+        Query query = this.queryManager.createQuery(statement, "solr").setLimit(1);
+        QueryResponse response = (QueryResponse) query.execute().get(0);
+        List<?> queryResults = response.getResults().stream()
+            .map((SolrDocument doc) -> serializer.serialize(solrDocumentReferenceResolver.resolve(doc)))
+            .collect(Collectors.toList());
+        return queryResults;
+    }
+
     private List<?> getURLShortenerObjectWithID(URLShortenerResourceReference resourceReference) throws QueryException
     {
         String statement =
@@ -132,21 +161,6 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         if (!resourceReference.getWikiId().isEmpty()) {
             query = query.setWiki(resourceReference.getWikiId());
         }
-
-        List<?> queryResults = query.execute();
-
-        if (queryResults.isEmpty()) {
-            // If no short url is found on the given subwiki, try to find the pageID in all subwikis.
-            // Note that the query is very slow when solr is reindexing.
-            statement = "property.URLShortener.Code.URLShortenerClass.pageID:" + ClientUtils.escapeQueryChars(
-                resourceReference.getPageId());
-            query = this.queryManager.createQuery(statement, "solr").setLimit(1);
-            QueryResponse response = (QueryResponse) query.execute().get(0);
-            queryResults = response.getResults().stream().map(
-                    // Get document reference without the locale part (which would lead to an inexistent page).
-                    (SolrDocument doc) -> solrDocumentReferenceResolver.resolve(doc).toString())
-                .collect(Collectors.toList());
-        }
-        return queryResults;
+        return query.execute();
     }
 }
