@@ -110,7 +110,7 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
                 }
             } else {
                 // If no short url is found on the given subwiki, try to find the pageID in all subwikis.
-                results = getURLShortenerObjectWithIDAnyWiki(urlResourceReference);
+                results = getURLShortenerObjectWithIDOnAnyWiki(urlResourceReference);
                 if (!results.isEmpty()) {
                     documentReference = documentReferenceResolver.resolve((String) results.get(0));
                 }
@@ -134,10 +134,12 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         chain.handleNext(reference);
     }
 
-    private List<?> getURLShortenerObjectWithIDAnyWiki(URLShortenerResourceReference resourceReference)
+    private List<?> getURLShortenerObjectWithIDOnAnyWiki(URLShortenerResourceReference resourceReference)
         throws QueryException
     {
         // Note that the query is very slow when solr is reindexing.
+        // Also, for newly added URLShortener objects, SOLR takes some moments to update with its value. So this SOLR
+        // query might also return null if it didn't finish updating the index.
         String statement = "property.URLShortener.Code.URLShortenerClass.pageID:" + ClientUtils.escapeQueryChars(
             resourceReference.getPageId());
         Query query = this.queryManager.createQuery(statement, "solr").setLimit(1);
