@@ -36,5 +36,288 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{liveData id="shorturls" properties="doc.name,doc.location,pageID,_actions" showPageSizeDropdown="true" sort="pageID:asc" source="liveTable" sourceParameters="translationPrefix=urlshortener.livedata.&amp;className=URLShortener.Code.URLShortenerClass"}}{{/liveData}}</content>
+  <content>{{warning}}
+{{translation key="urlshortener.duplicates.warning.slow"/}}
+{{/warning}}
+
+----
+
+= {{translation key="urlshortener.duplicates.title"/}} =
+
+{{velocity output="false"}}
+#template('hierarchy_macros.vm')
+## Convenience method.
+#macro (escape $str)
+  $escapetool.xml($services.rendering.escape($str, 'xwiki/2.1'))
+#end
+{{/velocity}}
+
+{{velocity wiki="true"}}
+#set ($q = $services.query.createQuery('property.URLShortener.Code.URLShortenerClass.pageID:*',
+    'solr').setLimit(2000).execute().get(0).getResults())
+## Group shortURL pages by pageID.
+#set ($map = {})
+#foreach ($i in $q)
+  #set ($shortURLs = $i.get('property.URLShortener.Code.URLShortenerClass.pageID_string'))
+  #set ($ref = $services.solr.resolveDocument($i))
+  #set ($ref = $ref.withoutLocale())
+  #foreach ($shortURL in $shortURLs)
+    #if (!$map.keySet().contains($shortURL))
+      #set ($discard = $map.put($shortURL, [$ref]))
+    #elseif (!$map.get($shortURL).contains($ref))
+      #set ($discard = $map.get($shortURL).add($ref))
+    #end
+  #end
+#end
+
+{{html wiki=true}}
+#set ($noDuplicates = true)
+#foreach ($shortUrl in $map.keySet())
+  #if ($map.get($shortUrl).size() &gt; 1)
+    #set ($noDuplicates = false)
+    == {{translation key="urlshortener.duplicates.title.section" parameters="$shortUrl,$map.get($shortUrl).size()"/}} ==
+    #foreach ($foundDoc in $map.get($shortUrl))
+      |&lt;button class='btn urlshortener-regenerate-btn' data-old-page-id='#escape($shortUrl)' data-page-ref='#escape($foundDoc)'&gt;{{translation key="urlshortener.duplicates.regenerate.button"/}}&lt;/button&gt;|(%style="width: 100%;"%)$services.rendering.escape("#hierarchy($foundDoc, {})", 'xwiki/2.1')|
+    #end
+  #end
+#end
+{{/html}}
+
+#if ($noDuplicates)
+  {{info}}{{translation key="urlshortener.duplicates.none"/}}{{/info}}
+#end
+{{/velocity}}</content>
+  <object>
+    <name>URLShortener.WebHome</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>6aa88232-acb3-43e1-96f2-4f6cf6dd1573</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>require(['jquery', 'urlshortener-localization'], function ($, l10n) {
+        function regenerateURL(element) {
+        element = element.currentTarget;
+        const oldPageID = element.getAttribute('data-old-page-id');
+        const pageRef = element.getAttribute('data-page-ref');
+        const postURL = '/xwiki/rest/p/regenerate?' + new URLSearchParams({ oldPageID: oldPageID, currentDocRef: pageRef });
+        let notification = new XWiki.widgets.Notification(l10n.regenerateInProgress,'inprogress');
+        $.post(postURL, {}).done(function(response) {
+        notification.replace(new XWiki.widgets.Notification(l10n.regenerateDone,'done'));
+        $(element).prop('disabled', 'true');
+        }).fail(function() {
+        notification.replace(new XWiki.widgets.Notification(l10n.regenerateFail,'error'));
+        });
+        };
+        $('.urlshortener-regenerate-btn').click(regenerateURL);
+        });</code>
+    </property>
+    <property>
+      <name>Regenerate URL</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>URLShortener.WebHome</name>
+    <number>1</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>1ba70e4f-76bf-4c7e-af61-a2b0958875ee</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>define('urlshortener-translation-keys', {
+        prefix: 'urlshortener.duplicates.',
+        keys: [
+        'regenerate.inprogress',
+        'regenerate.done',
+        'regenerate.fail',
+        ],
+        });
+
+        define('urlshortener-localization', ['xwiki-l10n!urlshortener-translation-keys'], function (l10n) {
+        return {
+        regenerateInProgress: l10n['regenerate.inprogress'],
+        regenerateDone: l10n['regenerate.done'],
+        regenerateFail: l10n['regenerate.fail'],
+        };
+        });</code>
+    </property>
+    <property>
+      <name>Localization</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
 </xwikidoc>

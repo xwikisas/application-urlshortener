@@ -41,10 +41,15 @@ urlshortener.menu.action.done=URL copied to clipboard
 urlshortener.menu.action.fail=An error occurred while creating the shortened URL.
 urlshortener.menu.action.shortcut=Alt+u
 
-urlshortener.livedata.pageID=Short URL
-urlshortener.livedata.doc.name=Title
-urlshortener.livedata.doc.location=Location
-urlshortener.livedata._actions=Page Actions
+
+urlshortener.duplicates.none=No pages with duplicate shortURLs found.
+urlshortener.duplicates.title=Pages with duplicate shortURLs
+urlshortener.duplicates.title.section=Pages with pageID = {0} ({1} pages)
+urlshortener.duplicates.warning.slow=This page might be slow when SOLR is reindexing or when there are many short URLs registered.
+urlshortener.duplicates.regenerate.button=Regenerate URL
+urlshortener.duplicates.regenerate.inprogress=Updating Short URL...
+urlshortener.duplicates.regenerate.done=Short URL Updated
+urlshortener.duplicates.regenerate.fail=Something went wrong
 </content>
   <object>
     <name>URLShortener.Code.Translations</name>

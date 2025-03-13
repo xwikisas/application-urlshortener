@@ -21,6 +21,7 @@ package com.xwiki.urlshortener.internal.rest;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Provider;
 import javax.ws.rs.WebApplicationException;
@@ -60,9 +61,13 @@ import com.xpn.xwiki.web.XWikiResponse;
 import ch.qos.logback.classic.Level;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -266,5 +271,67 @@ public class DefaultURLShortenerResourceTest
         assertEquals(String.format(
             "Error while computing the shortened URL for document [%s]. Root cause: [XWikiException: Error number"
                 + " 0 in 0]", currentDocRef.toString()), logCapture.getMessage(0));
+    }
+
+    /**
+     * Test the case where the requested URLShortener object exists, so that value is replaced.
+     */
+    @Test
+    void regenerateShortenedURLWithObject() throws Exception
+    {
+        String currentDocRefStr = "A.B";
+        DocumentReference currentDocRef = new DocumentReference("wiki", "A", "B");
+        when(documentReferenceResolver.resolve(currentDocRefStr)).thenReturn(currentDocRef);
+        when(authorization.hasAccess(Right.EDIT, currentDocRef)).thenReturn(true);
+        when(xwiki.getDocument(currentDocRef, xcontext)).thenReturn(document);
+        when(this.queryManager.createQuery(any(), eq("solr"))).thenReturn(query);
+        when(query.execute()).thenReturn(Collections.singletonList(queryResponse));
+        when(queryResponse.getResults()).thenReturn(new SolrDocumentList());
+
+        // The URLShortenerClass object already exists
+        BaseObject urlObject = new BaseObject();
+        urlObject.setStringValue(PAGE_ID, PAGE_ID_VALUE);
+        when(document.getXObjects(URL_SHORTENER_CLASS_REFERENCE)).thenReturn(List.of(urlObject));
+
+        Response response = this.urlShortenerResource.regenerateShortenedURL(currentDocRefStr, PAGE_ID_VALUE);
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertNotEquals("{pageID=12345}", String.valueOf(response.getEntity()));
+        verify(xwiki).saveDocument(eq(document), anyString(), anyBoolean(), eq(xcontext));
+    }
+
+    /**
+     * Test the case where there isn't any URLShortener object, so no update is made.
+     */
+    @Test
+    void regenerateShortenedURLWithoutObject() throws Exception
+    {
+        String currentDocRefStr = "A.B";
+        DocumentReference currentDocRef = new DocumentReference("wiki", "A", "B");
+        when(documentReferenceResolver.resolve(currentDocRefStr)).thenReturn(currentDocRef);
+        when(authorization.hasAccess(Right.EDIT, currentDocRef)).thenReturn(true);
+        when(xwiki.getDocument(currentDocRef, xcontext)).thenReturn(document);
+
+        // The URLShortenerClass object does not exist.
+        when(document.getXObjects(URL_SHORTENER_CLASS_REFERENCE)).thenReturn(List.of());
+
+        Response response = this.urlShortenerResource.regenerateShortenedURL(currentDocRefStr, PAGE_ID_VALUE);
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        verify(xwiki, never()).saveDocument(eq(document), anyString(), anyBoolean(), eq(xcontext));
+    }
+
+    /**
+     * Test the case where the current user does not have edit access on the requested document.
+     */
+    @Test
+    void regenerateShortenedURLWithoutViewAccess() throws Exception
+    {
+        String currentDocRefStr = "A.B";
+        DocumentReference currentDocRef = new DocumentReference("wiki", "A", "B");
+        when(documentReferenceResolver.resolve(currentDocRefStr)).thenReturn(currentDocRef);
+        when(authorization.hasAccess(Right.EDIT, currentDocRef)).thenReturn(false);
+
+        WebApplicationException exception = assertThrows(WebApplicationException.class,
+            () -> this.urlShortenerResource.regenerateShortenedURL(currentDocRefStr, PAGE_ID_VALUE));
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), exception.getResponse().getStatus());
     }
 }

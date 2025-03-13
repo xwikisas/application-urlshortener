@@ -20,8 +20,11 @@
 package com.xwiki.urlshortener.internal.rest;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -124,6 +127,34 @@ public class DefaultURLShortenerResource implements URLShortenerResource
             }
 
             return Response.ok().entity(Map.of(PAGE_ID, pageID)).type(MediaType.APPLICATION_JSON).build();
+        } else {
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+    }
+
+    @Override
+    public Response regenerateShortenedURL(String currentDocRef, String oldPageID) throws Exception
+    {
+        XWikiContext xcontext = xcontextProvider.get();
+        DocumentReference documentReference = documentReferenceResolver.resolve(currentDocRef);
+        if (authorization.hasAccess(Right.EDIT, documentReference)) {
+            XWikiDocument currentDoc = xcontext.getWiki().getDocument(documentReference, xcontext);
+            List<BaseObject> oldObjects =
+                currentDoc.getXObjects(URL_SHORTENER_CLASS_REFERENCE).stream().filter(Objects::nonNull)
+                    .filter((baseObject) -> baseObject.getStringValue(PAGE_ID).equals(oldPageID))
+                    .collect(Collectors.toList());
+
+            if (oldObjects.isEmpty()) {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            } else {
+                String pageID = createPageID();
+                oldObjects.get(0).setStringValue(PAGE_ID, pageID);
+                // Don't create a history entry.
+                currentDoc.setMetaDataDirty(false);
+                currentDoc.setContentDirty(false);
+                xcontext.getWiki().saveDocument(currentDoc, "Regenerated URL Shortener.", true, xcontext);
+                return Response.ok().entity(Map.of(PAGE_ID, pageID)).type(MediaType.APPLICATION_JSON).build();
+            }
         } else {
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         }
