@@ -65,9 +65,11 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -149,6 +151,7 @@ public class DefaultURLShortenerResourceTest
         SolrDocument solrDocument = new SolrDocument();
         solrDocumentList.add(solrDocument);
         when(this.queryManager.createQuery(DEFAULT_STATEMENT, "solr")).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.execute()).thenReturn(Collections.singletonList(queryResponse));
         when(queryResponse.getResults()).thenReturn(solrDocumentList);
         when(solrEntityReferenceResolver.resolve(solrDocument, EntityType.DOCUMENT)).thenReturn(docReference);
@@ -172,6 +175,7 @@ public class DefaultURLShortenerResourceTest
         // Empty solr list response.
         SolrDocumentList solrDocumentList = new SolrDocumentList();
         when(this.queryManager.createQuery(DEFAULT_STATEMENT, "solr")).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.execute()).thenReturn(Collections.singletonList(queryResponse));
         when(queryResponse.getResults()).thenReturn(solrDocumentList);
 
@@ -191,6 +195,7 @@ public class DefaultURLShortenerResourceTest
         when(documentReferenceResolver.resolve(currentDocRefStr)).thenReturn(currentDocRef);
         when(authorization.hasAccess(Right.VIEW, currentDocRef)).thenReturn(true);
         when(xwiki.getDocument(currentDocRef, xcontext)).thenReturn(document);
+        when(xwiki.exists(currentDocRef, xcontext)).thenReturn(true);
 
         // The URLShortenerClass object already exists
         BaseObject urlObject = new BaseObject();
@@ -212,6 +217,7 @@ public class DefaultURLShortenerResourceTest
         when(documentReferenceResolver.resolve(currentDocRefStr)).thenReturn(currentDocRef);
         when(authorization.hasAccess(Right.VIEW, currentDocRef)).thenReturn(true);
         when(xwiki.getDocument(currentDocRef, xcontext)).thenReturn(document);
+        when(xwiki.exists(currentDocRef, xcontext)).thenReturn(true);
 
         // The URLShortenerClass object does not exist.
         when(document.getXObject(URL_SHORTENER_CLASS_REFERENCE)).thenReturn(null);
@@ -220,6 +226,7 @@ public class DefaultURLShortenerResourceTest
         // There is no other document with the generated ID.
         SolrDocumentList solrDocumentList = new SolrDocumentList();
         when(queryManager.createQuery(any(String.class), eq("solr"))).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.execute()).thenReturn(Collections.singletonList(queryResponse));
         when(queryResponse.getResults()).thenReturn(solrDocumentList);
 
@@ -227,6 +234,24 @@ public class DefaultURLShortenerResourceTest
 
         verify(xwiki).saveDocument(document, "Created URL Shortener.", true, xcontext);
         verify(object).set(eq(PAGE_ID), any(String.class), eq(xcontext));
+    }
+
+    /**
+     * Test the case where the requested page does not exist, so no URL or document should be created.
+     */
+    @Test
+    void createShortenedURLOnInexistentPage() throws Exception
+    {
+        String currentDocRefStr = "A.B";
+        DocumentReference currentDocRef = new DocumentReference("wiki", "A", "B");
+        when(documentReferenceResolver.resolve(currentDocRefStr)).thenReturn(currentDocRef);
+        when(authorization.hasAccess(Right.VIEW, currentDocRef)).thenReturn(true);
+        when(xwiki.getDocument(currentDocRef, xcontext)).thenReturn(document);
+        when(xwiki.exists(currentDocRef, xcontext)).thenReturn(false);
+
+        Response response = this.urlShortenerResource.createShortenedURL(currentDocRefStr);
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        verify(xwiki, times(0)).saveDocument(any(), any(), anyBoolean(), any());
     }
 
     /**
@@ -239,6 +264,7 @@ public class DefaultURLShortenerResourceTest
         DocumentReference currentDocRef = new DocumentReference("wiki", "A", "B");
         when(documentReferenceResolver.resolve(currentDocRefStr)).thenReturn(currentDocRef);
         when(authorization.hasAccess(Right.VIEW, currentDocRef)).thenReturn(false);
+        when(xwiki.exists(currentDocRef, xcontext)).thenReturn(true);
 
         WebApplicationException exception = assertThrows(WebApplicationException.class,
             () -> this.urlShortenerResource.createShortenedURL(currentDocRefStr));
@@ -257,6 +283,7 @@ public class DefaultURLShortenerResourceTest
         when(authorization.hasAccess(Right.VIEW, currentDocRef)).thenReturn(true);
         when(xwiki.getDocument(currentDocRef, xcontext)).thenReturn(document);
         when(document.getDocumentReference()).thenReturn(currentDocRef);
+        when(xwiki.exists(currentDocRef, xcontext)).thenReturn(true);
 
         // The URLShortenerClass object does not exist.
         when(document.getXObject(URL_SHORTENER_CLASS_REFERENCE)).thenReturn(null);

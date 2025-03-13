@@ -35,6 +35,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -119,6 +120,11 @@ public class DefaultURLShortenerResource implements URLShortenerResource
 
         XWikiContext xcontext = xcontextProvider.get();
         DocumentReference documentReference = documentReferenceResolver.resolve(currentDocRef);
+
+        if (!xcontext.getWiki().exists(documentReference, xcontext)) {
+            return Response.status(Response.Status.NOT_FOUND).type(MediaType.APPLICATION_JSON).build();
+        }
+
         if (authorization.hasAccess(Right.VIEW, documentReference)) {
             XWikiDocument currentDoc = xcontext.getWiki().getDocument(documentReference, xcontext);
             String pageID = addURLShortenerXObject(currentDoc);
@@ -203,8 +209,9 @@ public class DefaultURLShortenerResource implements URLShortenerResource
     private SolrDocument getURLShortenerObjectWithID(String pageID) throws QueryException
     {
         // This query needs to be done on all wikis.
-        String statement = "property.URLShortener.Code.URLShortenerClass.pageID:" + pageID;
-        Query query = this.queryManager.createQuery(statement, "solr");
+        String statement =
+            "property.URLShortener.Code.URLShortenerClass.pageID:" + ClientUtils.escapeQueryChars(pageID);
+        Query query = this.queryManager.createQuery(statement, "solr").setLimit(1);
         QueryResponse response = (QueryResponse) query.execute().get(0);
         SolrDocumentList results = response.getResults();
 

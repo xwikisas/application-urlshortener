@@ -308,7 +308,9 @@ require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($
     <property>
       <content>{{velocity}}
 #if ($services.licensing.licensor.hasLicensureForEntity(
-    $services.model.createDocumentReference('', ['URLShortener', 'Code'], 'URLShortenerClass')))
+    $services.model.createDocumentReference('', ['URLShortener', 'Code'], 'URLShortenerClass'))
+    &amp;&amp; $xwiki.exists($doc)
+)
   {{html clean="false"}}
   #template('menus_macros.vm')
   #set ($title = $escapetool.xml($services.localization.render('urlshortener.menu.button.title')))
