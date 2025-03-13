@@ -314,9 +314,6 @@
       <parse>0</parse>
     </property>
     <property>
-      <cache>long</cache>
-    </property>
-    <property>
       <use>currentPage</use>
     </property>
   </object>
