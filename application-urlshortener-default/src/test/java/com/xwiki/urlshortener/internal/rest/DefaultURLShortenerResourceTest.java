@@ -63,6 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -146,6 +147,7 @@ public class DefaultURLShortenerResourceTest
         SolrDocument solrDocument = new SolrDocument();
         solrDocumentList.add(solrDocument);
         when(this.queryManager.createQuery(DEFAULT_STATEMENT, "solr")).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.execute()).thenReturn(Collections.singletonList(queryResponse));
         when(queryResponse.getResults()).thenReturn(solrDocumentList);
         when(solrEntityReferenceResolver.resolve(solrDocument, EntityType.DOCUMENT)).thenReturn(docReference);
@@ -169,6 +171,7 @@ public class DefaultURLShortenerResourceTest
         // Empty solr list response.
         SolrDocumentList solrDocumentList = new SolrDocumentList();
         when(this.queryManager.createQuery(DEFAULT_STATEMENT, "solr")).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.execute()).thenReturn(Collections.singletonList(queryResponse));
         when(queryResponse.getResults()).thenReturn(solrDocumentList);
 
@@ -219,6 +222,7 @@ public class DefaultURLShortenerResourceTest
         // There is no other document with the generated ID.
         SolrDocumentList solrDocumentList = new SolrDocumentList();
         when(queryManager.createQuery(any(String.class), eq("solr"))).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.execute()).thenReturn(Collections.singletonList(queryResponse));
         when(queryResponse.getResults()).thenReturn(solrDocumentList);
 

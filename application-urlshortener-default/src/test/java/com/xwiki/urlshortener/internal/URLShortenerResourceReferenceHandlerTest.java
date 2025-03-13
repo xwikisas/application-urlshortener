@@ -20,15 +20,20 @@
 package com.xwiki.urlshortener.internal;
 
 import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.model.reference.DocumentReference;
@@ -50,6 +55,7 @@ import com.xpn.xwiki.XWikiContext;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -95,6 +101,12 @@ public class URLShortenerResourceReferenceHandlerTest
     @Mock
     private Query query;
 
+    @Mock
+    private Query solrQuery;
+
+    @Mock
+    private QueryResponse solrResponse;
+
     @BeforeEach
     void beforeEach()
     {
@@ -113,6 +125,7 @@ public class URLShortenerResourceReferenceHandlerTest
 
         when(queryManager.createQuery(any(String.class), eq(Query.XWQL))).thenReturn(query);
         when(query.bindValue(URLShortenerResourceReferenceHandler.PAGE_ID, pageId)).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.setWiki(wikiId)).thenReturn(query);
         String docRef = "test.Space.Page";
         DocumentReference documentReference = new DocumentReference(wikiId, "Space", "Page");
@@ -137,6 +150,7 @@ public class URLShortenerResourceReferenceHandlerTest
 
         when(queryManager.createQuery(any(String.class), eq(Query.XWQL))).thenReturn(query);
         when(query.bindValue(URLShortenerResourceReferenceHandler.PAGE_ID, pageId)).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         String docRef = "wiki.Space.Page";
         DocumentReference documentReference = new DocumentReference("wiki", "Space", "Page");
         when(documentReferenceResolver.resolve(docRef)).thenReturn(documentReference);
@@ -154,6 +168,41 @@ public class URLShortenerResourceReferenceHandlerTest
     }
 
     @Test
+    void handleWithSolrQueryResults() throws Exception
+    {
+        String pageId = "123";
+        String wikiId = "test";
+
+        when(queryManager.createQuery(any(String.class), eq(Query.XWQL))).thenReturn(query);
+        when(query.bindValue(URLShortenerResourceReferenceHandler.PAGE_ID, pageId)).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
+        when(query.setWiki(wikiId)).thenReturn(query);
+        when(query.execute()).thenReturn(Collections.emptyList());
+        when(queryManager.createQuery(any(String.class), eq("solr"))).thenReturn(solrQuery);
+        String docRef = "test.Space.Page";
+        DocumentReference documentReference = new DocumentReference(wikiId, "Space", "Page");
+        when(documentReferenceResolver.resolve(docRef)).thenReturn(documentReference);
+
+        SolrDocumentList solrDocumentList = new SolrDocumentList();
+        SolrDocument solrDocument = Mockito.mock(SolrDocument.class);
+        when(solrDocument.toString()).thenReturn(docRef);
+        solrDocumentList.add(new SolrDocument());
+        when(solrQuery.setLimit(anyInt())).thenReturn(solrQuery);
+        when(solrQuery.execute()).thenReturn(List.of(solrResponse));
+        when(solrResponse.getResults()).thenReturn(solrDocumentList);
+        when(documentReferenceResolver.resolve(any())).thenReturn(documentReference);
+
+        String docURL = "docURL";
+        when(xwiki.getURL(documentReference, xcontext)).thenReturn(docURL);
+
+        URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
+        resourceReferenceHandler.handle(resourceReference, handlerChain);
+
+        verify(httpServletServletResponse, times(1)).sendRedirect(docURL);
+        verify(handlerChain, times(1)).handleNext(resourceReference);
+    }
+
+    @Test
     void handleWithoutQueryResults() throws Exception
     {
         String pageId = "123";
@@ -161,8 +210,13 @@ public class URLShortenerResourceReferenceHandlerTest
 
         when(queryManager.createQuery(any(String.class), eq(Query.XWQL))).thenReturn(query);
         when(query.bindValue(URLShortenerResourceReferenceHandler.PAGE_ID, pageId)).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.setWiki(wikiId)).thenReturn(query);
         when(query.execute()).thenReturn(Collections.emptyList());
+        when(queryManager.createQuery(any(String.class), eq("solr"))).thenReturn(solrQuery);
+        when(solrQuery.setLimit(anyInt())).thenReturn(solrQuery);
+        when(solrQuery.execute()).thenReturn(List.of(solrResponse));
+        when(solrResponse.getResults()).thenReturn(new SolrDocumentList());
 
         URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
         resourceReferenceHandler.handle(resourceReference, handlerChain);
