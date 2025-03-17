@@ -312,6 +312,7 @@ public class DefaultURLShortenerResourceTest
         when(authorization.hasAccess(Right.EDIT, currentDocRef)).thenReturn(true);
         when(xwiki.getDocument(currentDocRef, xcontext)).thenReturn(document);
         when(this.queryManager.createQuery(any(), eq("solr"))).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
         when(query.execute()).thenReturn(Collections.singletonList(queryResponse));
         when(queryResponse.getResults()).thenReturn(new SolrDocumentList());
 

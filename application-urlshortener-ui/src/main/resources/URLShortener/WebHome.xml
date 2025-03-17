@@ -53,13 +53,13 @@
 {{/velocity}}
 
 {{velocity wiki="true"}}
-#set ($q = $services.query.createQuery('property.URLShortener.Code.URLShortenerClass.pageID:*',
+#set ($query = $services.query.createQuery('property.URLShortener.Code.URLShortenerClass.pageID:*',
     'solr').setLimit(2000).execute().get(0).getResults())
 ## Group shortURL pages by pageID.
 #set ($map = {})
-#foreach ($i in $q)
-  #set ($shortURLs = $i.get('property.URLShortener.Code.URLShortenerClass.pageID_string'))
-  #set ($ref = $services.solr.resolveDocument($i))
+#foreach ($resultDoc in $query)
+  #set ($shortURLs = $resultDoc.get('property.URLShortener.Code.URLShortenerClass.pageID_string'))
+  #set ($ref = $services.solr.resolveDocument($resultDoc))
   #set ($ref = $ref.withoutLocale())
   #foreach ($shortURL in $shortURLs)
     #if (!$map.keySet().contains($shortURL))
@@ -70,19 +70,39 @@
   #end
 #end
 
-{{html wiki=true}}
+{{html wiki="false"}}
 #set ($noDuplicates = true)
 #foreach ($shortUrl in $map.keySet())
   #if ($map.get($shortUrl).size() &gt; 1)
     #set ($noDuplicates = false)
-    == {{translation key="urlshortener.duplicates.title.section" parameters="$shortUrl,$map.get($shortUrl).size()"/}} ==
+    &lt;h2&gt;
+      $services.localization.render(
+        'urlshortener.duplicates.title.section',
+        [$escapetool.xml($shortUrl), $map.get($shortUrl).size()]
+      )
+    &lt;/h2&gt;
+    &lt;table&gt;
     #foreach ($foundDoc in $map.get($shortUrl))
-      |&lt;button class='btn urlshortener-regenerate-btn' data-old-page-id='#escape($shortUrl)' data-page-ref='#escape($foundDoc)'&gt;{{translation key="urlshortener.duplicates.regenerate.button"/}}&lt;/button&gt;|(%style="width: 100%;"%)$services.rendering.escape("#hierarchy($foundDoc, {})", 'xwiki/2.1')|
+      &lt;tr&gt;
+        &lt;td&gt;
+          &lt;button class='btn urlshortener-regenerate-btn'
+              data-old-page-id='$escapetool.xml($shortUrl)'
+              data-page-ref='$escapetool.xml($foundDoc)'&gt;
+            $services.localization.render('urlshortener.duplicates.regenerate.button')
+          &lt;/button&gt;
+        &lt;/td&gt;
+        &lt;td style='width: 100%;'&gt;
+          #hierarchy($foundDoc, {})
+        &lt;/td&gt;
+      &lt;/tr&gt;
     #end
+    &lt;/table&gt;
   #end
 #end
 {{/html}}
+{{/velocity}}
 
+{{velocity wiki="true"}}
 #if ($noDuplicates)
   {{info}}{{translation key="urlshortener.duplicates.none"/}}{{/info}}
 #end
@@ -176,21 +196,21 @@
     </property>
     <property>
       <code>require(['jquery', 'urlshortener-localization'], function ($, l10n) {
-        function regenerateURL(element) {
-        element = element.currentTarget;
-        const oldPageID = element.getAttribute('data-old-page-id');
-        const pageRef = element.getAttribute('data-page-ref');
-        const postURL = '/xwiki/rest/p/regenerate?' + new URLSearchParams({ oldPageID: oldPageID, currentDocRef: pageRef });
-        let notification = new XWiki.widgets.Notification(l10n.regenerateInProgress,'inprogress');
-        $.post(postURL, {}).done(function(response) {
-        notification.replace(new XWiki.widgets.Notification(l10n.regenerateDone,'done'));
-        $(element).prop('disabled', 'true');
-        }).fail(function() {
-        notification.replace(new XWiki.widgets.Notification(l10n.regenerateFail,'error'));
-        });
-        };
-        $('.urlshortener-regenerate-btn').click(regenerateURL);
-        });</code>
+  function regenerateURL(element) {
+    element = element.currentTarget;
+    const oldPageID = element.getAttribute('data-old-page-id');
+    const pageRef = element.getAttribute('data-page-ref');
+    const postURL = '/xwiki/rest/p/regenerate?' + new URLSearchParams({ oldPageID: oldPageID, currentDocRef: pageRef });
+    let notification = new XWiki.widgets.Notification(l10n.regenerateInProgress,'inprogress');
+    $.post(postURL, {}).done(function(response) {
+      notification.replace(new XWiki.widgets.Notification(l10n.regenerateDone,'done'));
+      $(element).prop('disabled', 'true');
+    }).fail(function() {
+      notification.replace(new XWiki.widgets.Notification(l10n.regenerateFail,'error'));
+    });
+  };
+  $('.urlshortener-regenerate-btn').click(regenerateURL);
+});</code>
     </property>
     <property>
       <name>Regenerate URL</name>
@@ -291,21 +311,21 @@
     </property>
     <property>
       <code>define('urlshortener-translation-keys', {
-        prefix: 'urlshortener.duplicates.',
-        keys: [
-        'regenerate.inprogress',
-        'regenerate.done',
-        'regenerate.fail',
-        ],
-        });
+  prefix: 'urlshortener.duplicates.',
+  keys: [
+    'regenerate.inprogress',
+    'regenerate.done',
+    'regenerate.fail',
+  ],
+});
 
-        define('urlshortener-localization', ['xwiki-l10n!urlshortener-translation-keys'], function (l10n) {
-        return {
-        regenerateInProgress: l10n['regenerate.inprogress'],
-        regenerateDone: l10n['regenerate.done'],
-        regenerateFail: l10n['regenerate.fail'],
-        };
-        });</code>
+define('urlshortener-localization', ['xwiki-l10n!urlshortener-translation-keys'], function (l10n) {
+  return {
+    regenerateInProgress: l10n['regenerate.inprogress'],
+    regenerateDone: l10n['regenerate.done'],
+    regenerateFail: l10n['regenerate.fail'],
+  };
+});</code>
     </property>
     <property>
       <name>Localization</name>
