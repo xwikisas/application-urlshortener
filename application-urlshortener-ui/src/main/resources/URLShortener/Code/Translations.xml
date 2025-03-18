@@ -50,6 +50,7 @@ urlshortener.duplicates.regenerate.button=Regenerate URL
 urlshortener.duplicates.regenerate.inprogress=Updating short URL...
 urlshortener.duplicates.regenerate.done=Short URL updated
 urlshortener.duplicates.regenerate.fail=Something went wrong
+urlshortener.duplicates.regenerate.fail.unauthorized=Insufficient rights
 </content>
   <object>
     <name>URLShortener.Code.Translations</name>

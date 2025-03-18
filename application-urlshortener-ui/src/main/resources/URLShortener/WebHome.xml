@@ -201,12 +201,13 @@
     const oldPageID = element.getAttribute('data-old-page-id');
     const pageRef = element.getAttribute('data-page-ref');
     const postURL = '/xwiki/rest/p/regenerate?' + new URLSearchParams({ oldPageID: oldPageID, currentDocRef: pageRef });
-    let notification = new XWiki.widgets.Notification(l10n.regenerateInProgress,'inprogress');
+    let notification = new XWiki.widgets.Notification(l10n.regenerateInProgress, 'inprogress');
     $.post(postURL, {}).done(function(response) {
-      notification.replace(new XWiki.widgets.Notification(l10n.regenerateDone,'done'));
+      notification.replace(new XWiki.widgets.Notification(l10n.regenerateDone, 'done'));
       $(element).prop('disabled', 'true');
-    }).fail(function() {
-      notification.replace(new XWiki.widgets.Notification(l10n.regenerateFail,'error'));
+    }).fail(function(error) {
+      let failMessage = (error.status == 401) ? l10n.regenerateFailUnauthorized : l10n.regenerateFail;
+      notification.replace(new XWiki.widgets.Notification(failMessage, 'error'));
     });
   };
   $('.urlshortener-regenerate-btn').click(regenerateURL);
@@ -316,6 +317,7 @@
     'regenerate.inprogress',
     'regenerate.done',
     'regenerate.fail',
+    'regenerate.fail.unauthorized',
   ],
 });
 
@@ -324,6 +326,7 @@ define('urlshortener-localization', ['xwiki-l10n!urlshortener-translation-keys']
     regenerateInProgress: l10n['regenerate.inprogress'],
     regenerateDone: l10n['regenerate.done'],
     regenerateFail: l10n['regenerate.fail'],
+    regenerateFailUnauthorized: l10n['regenerate.fail.unauthorized'],
   };
 });</code>
     </property>
