@@ -204,7 +204,7 @@ require(['jquery', 'xwiki-l10n!urlshortener-translation-keys'], function ($, l10
     element = element.currentTarget;
     const oldPageID = element.getAttribute('data-old-page-id');
     const pageRef = element.getAttribute('data-page-ref');
-    const postURL = new URL('/xwiki/rest/p/regenerate?', window.location.href);
+    const postURL = new URL('/xwiki/rest/p/regenerate', window.location.href);
     postURL.searchParams.set('oldPageID', oldPageID);
     postURL.searchParams.set('currentDocRef', pageRef);
 
