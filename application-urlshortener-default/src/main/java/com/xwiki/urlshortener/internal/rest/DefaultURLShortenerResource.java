@@ -158,7 +158,7 @@ public class DefaultURLShortenerResource implements URLShortenerResource
                 // Don't create a history entry.
                 currentDoc.setMetaDataDirty(false);
                 currentDoc.setContentDirty(false);
-                xcontext.getWiki().saveDocument(currentDoc, "Regenerated URL Shortener.", true, xcontext);
+                xcontext.getWiki().saveDocument(currentDoc, "Regenerate short URL.", true, xcontext);
                 return Response.ok().entity(Map.of(PAGE_ID, pageID)).type(MediaType.APPLICATION_JSON).build();
             }
         } else {

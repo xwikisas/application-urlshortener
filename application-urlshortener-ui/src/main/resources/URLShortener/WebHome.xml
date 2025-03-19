@@ -46,10 +46,6 @@
 
 {{velocity output="false"}}
 #template('hierarchy_macros.vm')
-## Convenience method.
-#macro (escape $str)
-  $escapetool.xml($services.rendering.escape($str, 'xwiki/2.1'))
-#end
 {{/velocity}}
 
 {{velocity wiki="true"}}
@@ -70,7 +66,7 @@
   #end
 #end
 
-{{html wiki="false"}}
+{{html}}
 #set ($noDuplicates = true)
 #foreach ($shortUrl in $map.keySet())
   #if ($map.get($shortUrl).size() &gt; 1)
@@ -91,7 +87,7 @@
             $services.localization.render('urlshortener.duplicates.regenerate.button')
           &lt;/button&gt;
         &lt;/td&gt;
-        &lt;td style='width: 100%;'&gt;
+        &lt;td class='urlshortener-duplicates-table-wide-column'&gt;
           #hierarchy($foundDoc, {})
         &lt;/td&gt;
       &lt;/tr&gt;
@@ -100,9 +96,7 @@
   #end
 #end
 {{/html}}
-{{/velocity}}
 
-{{velocity wiki="true"}}
 #if ($noDuplicates)
   {{info}}{{translation key="urlshortener.duplicates.none"/}}{{/info}}
 #end
@@ -112,122 +106,6 @@
     <number>0</number>
     <className>XWiki.JavaScriptExtension</className>
     <guid>6aa88232-acb3-43e1-96f2-4f6cf6dd1573</guid>
-    <class>
-      <name>XWiki.JavaScriptExtension</name>
-      <customClass/>
-      <customMapping/>
-      <defaultViewSheet/>
-      <defaultEditSheet/>
-      <defaultWeb/>
-      <nameField/>
-      <validationScript/>
-      <cache>
-        <cache>0</cache>
-        <defaultValue>long</defaultValue>
-        <disabled>0</disabled>
-        <displayType>select</displayType>
-        <freeText>forbidden</freeText>
-        <largeStorage>0</largeStorage>
-        <multiSelect>0</multiSelect>
-        <name>cache</name>
-        <number>5</number>
-        <prettyName>Caching policy</prettyName>
-        <relationalStorage>0</relationalStorage>
-        <separator> </separator>
-        <separators>|, </separators>
-        <size>1</size>
-        <unmodifiable>0</unmodifiable>
-        <values>long|short|default|forbid</values>
-        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
-      </cache>
-      <code>
-        <contenttype>PureText</contenttype>
-        <disabled>0</disabled>
-        <editor>PureText</editor>
-        <name>code</name>
-        <number>2</number>
-        <prettyName>Code</prettyName>
-        <restricted>0</restricted>
-        <rows>20</rows>
-        <size>50</size>
-        <unmodifiable>0</unmodifiable>
-        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
-      </code>
-      <name>
-        <disabled>0</disabled>
-        <name>name</name>
-        <number>1</number>
-        <prettyName>Name</prettyName>
-        <size>30</size>
-        <unmodifiable>0</unmodifiable>
-        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
-      </name>
-      <parse>
-        <disabled>0</disabled>
-        <displayFormType>select</displayFormType>
-        <displayType>yesno</displayType>
-        <name>parse</name>
-        <number>4</number>
-        <prettyName>Parse content</prettyName>
-        <unmodifiable>0</unmodifiable>
-        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
-      </parse>
-      <use>
-        <cache>0</cache>
-        <disabled>0</disabled>
-        <displayType>select</displayType>
-        <freeText>forbidden</freeText>
-        <largeStorage>0</largeStorage>
-        <multiSelect>0</multiSelect>
-        <name>use</name>
-        <number>3</number>
-        <prettyName>Use this extension</prettyName>
-        <relationalStorage>0</relationalStorage>
-        <separator> </separator>
-        <separators>|, </separators>
-        <size>1</size>
-        <unmodifiable>0</unmodifiable>
-        <values>currentPage|onDemand|always</values>
-        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
-      </use>
-    </class>
-    <property>
-      <cache>long</cache>
-    </property>
-    <property>
-      <code>require(['jquery', 'urlshortener-localization'], function ($, l10n) {
-  function regenerateURL(element) {
-    element = element.currentTarget;
-    const oldPageID = element.getAttribute('data-old-page-id');
-    const pageRef = element.getAttribute('data-page-ref');
-    const postURL = '/xwiki/rest/p/regenerate?' + new URLSearchParams({ oldPageID: oldPageID, currentDocRef: pageRef });
-    let notification = new XWiki.widgets.Notification(l10n.regenerateInProgress, 'inprogress');
-    $.post(postURL, {}).done(function(response) {
-      notification.replace(new XWiki.widgets.Notification(l10n.regenerateDone, 'done'));
-      $(element).prop('disabled', 'true');
-    }).fail(function(error) {
-      let failMessage = (error.status == 401) ? l10n.regenerateFailUnauthorized : l10n.regenerateFail;
-      notification.replace(new XWiki.widgets.Notification(failMessage, 'error'));
-    });
-  };
-  $('.urlshortener-regenerate-btn').click(regenerateURL);
-});</code>
-    </property>
-    <property>
-      <name>Regenerate URL</name>
-    </property>
-    <property>
-      <parse>0</parse>
-    </property>
-    <property>
-      <use>currentPage</use>
-    </property>
-  </object>
-  <object>
-    <name>URLShortener.WebHome</name>
-    <number>1</number>
-    <className>XWiki.JavaScriptExtension</className>
-    <guid>1ba70e4f-76bf-4c7e-af61-a2b0958875ee</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -321,17 +199,152 @@
   ],
 });
 
-define('urlshortener-localization', ['xwiki-l10n!urlshortener-translation-keys'], function (l10n) {
-  return {
-    regenerateInProgress: l10n['regenerate.inprogress'],
-    regenerateDone: l10n['regenerate.done'],
-    regenerateFail: l10n['regenerate.fail'],
-    regenerateFailUnauthorized: l10n['regenerate.fail.unauthorized'],
+require(['jquery', 'xwiki-l10n!urlshortener-translation-keys'], function ($, l10n) {
+  function regenerateURL(element) {
+    element = element.currentTarget;
+    const oldPageID = element.getAttribute('data-old-page-id');
+    const pageRef = element.getAttribute('data-page-ref');
+    const postURL = new URL('/xwiki/rest/p/regenerate?', window.location.href);
+    postURL.searchParams.set('oldPageID', oldPageID);
+    postURL.searchParams.set('currentDocRef', pageRef);
+
+    let notification = new XWiki.widgets.Notification(l10n['regenerate.inprogress'], 'inprogress');
+    $.post(postURL, {}).done(function(response) {
+      notification.replace(new XWiki.widgets.Notification(l10n['regenerate.done'], 'done'));
+      $(element).prop('disabled', 'true');
+    }).fail(function(error) {
+      let failMessage = (error.status == 401) ? l10n['regenerate.fail.unauthorized'] : l10n['regenerate.fail'];
+      notification.replace(new XWiki.widgets.Notification(failMessage, 'error'));
+    });
   };
+  $(document).on('click', '.urlshortener-regenerate-btn', regenerateURL);
 });</code>
     </property>
     <property>
-      <name>Localization</name>
+      <name>Regenerate URL</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>URLShortener.WebHome</name>
+    <number>1</number>
+    <className>XWiki.StyleSheetExtension</className>
+    <guid>1ba70e4f-76bf-4c7e-af61-a2b0958875ee</guid>
+    <class>
+      <name>XWiki.StyleSheetExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <contentType>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>contentType</name>
+        <number>6</number>
+        <prettyName>Content Type</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>CSS|LESS</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </contentType>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>.urlshortener-duplicates-table-wide-column {
+  width: 100%;
+}</code>
+    </property>
+    <property>
+      <contentType>CSS</contentType>
+    </property>
+    <property>
+      <name>Duplicates table styles</name>
     </property>
     <property>
       <parse>0</parse>
