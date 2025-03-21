@@ -43,7 +43,10 @@ urlshortener.menu.action.shortcut=Alt+u
 
 
 urlshortener.duplicates.none=No pages with duplicate short URLs found.
-urlshortener.duplicates.title=Pages with duplicate short URLs
+urlshortener.duplicates.critical.title=Pages with critical short URL conflicts
+urlshortener.duplicates.critical.description=These short URL duplicates override each other, preventing access to some pages.
+urlshortener.duplicates.potential.title=Pages with potential short URL conflicts
+urlshortener.duplicates.potential.description=These short URL duplicates are not currently causing issues, but could override other pages if moved between subwikis.
 urlshortener.duplicates.title.section=Pages with pageID = {0} ({1} pages)
 urlshortener.duplicates.warning.slow=This page might be slow when SOLR is reindexing or when there are many short URLs registered.
 urlshortener.duplicates.regenerate.button=Regenerate URL

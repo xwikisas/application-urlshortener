@@ -42,64 +42,113 @@
 
 ----
 
-= {{translation key="urlshortener.duplicates.title"/}} =
-
 {{velocity output="false"}}
 #template('hierarchy_macros.vm')
-{{/velocity}}
-
-{{velocity wiki="true"}}
+#macro (makeDuplicatesSection $map)
+  {{html}}
+  #foreach ($shortUrl in $map.keySet())
+    #if ($map.get($shortUrl).size() &gt; 1)
+      &lt;section&gt;
+        &lt;h2&gt;
+          $escapetool.xml($services.localization.render(
+            'urlshortener.duplicates.title.section',
+            [$shortUrl, $map.get($shortUrl).size()]
+          ))
+        &lt;/h2&gt;
+        &lt;table&gt;
+        #foreach ($foundDoc in $map.get($shortUrl))
+          &lt;tr&gt;
+            &lt;td&gt;
+              &lt;button class='btn urlshortener-regenerate-btn'
+                  data-old-page-id='$escapetool.xml($shortUrl)'
+                  data-page-ref='$escapetool.xml($foundDoc)'&gt;
+                $escapetool.xml($services.localization.render('urlshortener.duplicates.regenerate.button'))
+              &lt;/button&gt;
+            &lt;/td&gt;
+            &lt;td class='urlshortener-duplicates-table-hierarchy'&gt;
+              #hierarchy($foundDoc, {})
+            &lt;/td&gt;
+          &lt;/tr&gt;
+        #end
+        &lt;/table&gt;
+      &lt;/section&gt;
+    #end
+  #end
+  {{/html}}
+#end
 #set ($query = $services.query.createQuery('property.URLShortener.Code.URLShortenerClass.pageID:*',
-  'solr').setLimit(2000).execute().get(0).getResults())
+    'solr').setLimit(2000).execute().get(0).getResults())
 ## Group shortURL pages by pageID.
-#set ($map = {})
+#set ($duplicatesMap = {})
 #foreach ($resultDoc in $query)
   #set ($shortURLs = $resultDoc.get('property.URLShortener.Code.URLShortenerClass.pageID_string'))
   #set ($ref = $services.solr.resolveDocument($resultDoc))
   #set ($ref = $ref.withoutLocale())
   #foreach ($shortURL in $shortURLs)
-    #if (!$map.keySet().contains($shortURL))
-      #set ($discard = $map.put($shortURL, [$ref]))
-    #elseif (!$map.get($shortURL).contains($ref))
-      #set ($discard = $map.get($shortURL).add($ref))
+    #if (!$duplicatesMap.keySet().contains($shortURL))
+      #set ($discard = $duplicatesMap.put($shortURL, [$ref]))
+    #elseif (!$duplicatesMap.get($shortURL).contains($ref))
+      #set ($discard = $duplicatesMap.get($shortURL).add($ref))
     #end
   #end
 #end
+## Split duplicates by severity. Critical duplicates occur in the same subwiki, while
+## the potential duplicates only become a problem if pages are moved across subwikis.
+#set ($criticalDuplicatesMap = {})
+#set ($potentialDuplicatesMap = {})
+#if ($xwiki.hasSubWikis())
+  #foreach ($shortURL in $duplicatesMap.keySet())
+  #set ($duplicatesDocRefList = $duplicatesMap.get($shortURL))
+    #if ($duplicatesDocRefList.size() &gt; 1)
+      #set ($critical = true)
+      #set ($subwiki = $duplicatesDocRefList.get(0).getWiki())
+      #foreach ($documentRef in $duplicatesDocRefList)
+        #if ($documentRef.getWiki() != $subwiki)
+          #set ($critical = false)
+          #break
+        #end
+      #end
+      #if ($critical)
+        #set ($discard = $criticalDuplicatesMap.put($shortURL, $duplicatesDocRefList))
+      #else
+        #set ($discard = $potentialDuplicatesMap.put($shortURL, $duplicatesDocRefList))
+      #end
+    #end
+  #end
+#else
+  #set ($criticalDuplicatesMap = $duplicatesMap)
+#end
+{{/velocity}}
 
-{{html}}
-#set ($noDuplicates = true)
-#foreach ($shortUrl in $map.keySet())
-  #if ($map.get($shortUrl).size() &gt; 1)
-    #set ($noDuplicates = false)
-    &lt;h2&gt;
-      $services.localization.render(
-        'urlshortener.duplicates.title.section',
-        [$escapetool.xml($shortUrl), $map.get($shortUrl).size()]
-      )
-    &lt;/h2&gt;
-    &lt;table&gt;
-    #foreach ($foundDoc in $map.get($shortUrl))
-      &lt;tr&gt;
-        &lt;td&gt;
-          &lt;button class='btn urlshortener-regenerate-btn'
-              data-old-page-id='$escapetool.xml($shortUrl)'
-              data-page-ref='$escapetool.xml($foundDoc)'&gt;
-            $services.localization.render('urlshortener.duplicates.regenerate.button')
-          &lt;/button&gt;
-        &lt;/td&gt;
-        &lt;td class='urlshortener-duplicates-table-hierarchy'&gt;
-          #hierarchy($foundDoc, {})
-        &lt;/td&gt;
-      &lt;/tr&gt;
-    #end
-    &lt;/table&gt;
+{{velocity wiki="true"}}
+{{html wiki="true"}}
+&lt;section id='urlshortener-critical-duplicates-section'&gt;
+  &lt;h1&gt;$escapetool.xml($services.localization.render('urlshortener.duplicates.critical.title'))&lt;/h1&gt;
+  #if ($criticalDuplicatesMap.size() &gt; 0)
+
+  {{error}}$escapetool.xml($services.localization.render('urlshortener.duplicates.critical.description')){{/error}}
+
+    #makeDuplicatesSection($criticalDuplicatesMap)
+  #else
+
+    {{info}}{{translation key="urlshortener.duplicates.none"/}}{{/info}}
+
   #end
-#end
+&lt;/section&gt;
+&lt;section id='urlshortener-potential-duplicates-section'&gt;
+  &lt;h1&gt;$escapetool.xml($services.localization.render('urlshortener.duplicates.potential.title'))&lt;/h1&gt;
+  #if ($potentialDuplicatesMap.size() &gt; 0)
+
+  {{warning}}$escapetool.xml($services.localization.render('urlshortener.duplicates.potential.description')){{/warning}}
+
+    #makeDuplicatesSection($potentialDuplicatesMap)
+  #else
+
+    {{info}}{{translation key="urlshortener.duplicates.none"/}}{{/info}}
+
+  #end
+&lt;/section&gt;
 {{/html}}
-
-#if ($noDuplicates)
-  {{info}}{{translation key="urlshortener.duplicates.none"/}}{{/info}}
-#end
 {{/velocity}}</content>
   <object>
     <name>URLShortener.WebHome</name>
@@ -199,7 +248,7 @@
   ],
 });
 
-require(['jquery', 'xwiki-l10n!urlshortener-translation-keys'], function ($, l10n) {
+require(['jquery', 'xwiki-l10n!urlshortener-translation-keys', 'purify'], function ($, l10n, purify) {
   function regenerateURL(element) {
     element = element.currentTarget;
     const oldPageID = element.getAttribute('data-old-page-id');
@@ -208,13 +257,13 @@ require(['jquery', 'xwiki-l10n!urlshortener-translation-keys'], function ($, l10
     postURL.searchParams.set('oldPageID', oldPageID);
     postURL.searchParams.set('currentDocRef', pageRef);
 
-    let notification = new XWiki.widgets.Notification(l10n['regenerate.inprogress'], 'inprogress');
+    let notification = new XWiki.widgets.Notification(purify.sanitize(l10n['regenerate.inprogress']), 'inprogress');
     $.post(postURL, {}).done(function(response) {
-      notification.replace(new XWiki.widgets.Notification(l10n['regenerate.done'], 'done'));
+      notification.replace(new XWiki.widgets.Notification(purify.sanitize(l10n['regenerate.done']), 'done'));
       $(element).prop('disabled', 'true');
     }).fail(function(error) {
       let failMessage = (error.status == 401) ? l10n['regenerate.fail.unauthorized'] : l10n['regenerate.fail'];
-      notification.replace(new XWiki.widgets.Notification(failMessage, 'error'));
+      notification.replace(new XWiki.widgets.Notification(purify.sanitize(failMessage), 'error'));
     });
   };
   $(document).on('click', '.urlshortener-regenerate-btn', regenerateURL);
