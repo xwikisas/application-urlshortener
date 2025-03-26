@@ -43,6 +43,8 @@ urlshortener.menu.action.shortcut=Alt+u
 
 
 urlshortener.duplicates.none=No pages with duplicate short URLs found.
+urlshortener.duplicates.title=Pages with duplicate short URLs
+urlshortener.duplicates.description=It is possible to reach states where certain pages have the same short URLs, meaning that only one will be accessible using the short URL. This page offers a list of such pages for easy remediation. Conflicts with pages which you do not have View Rights on are not shown here.\n\nNote that some pages are listed as potential conflicts. Because the short URL contains the subwiki of a page, these pages work fine right now. But if they are moved between subwikis, then they will become conflicts.
 urlshortener.duplicates.critical.title=Pages with critical short URL conflicts
 urlshortener.duplicates.critical.description=These short URL duplicates override each other, preventing access to some pages.
 urlshortener.duplicates.potential.title=Pages with potential short URL conflicts
