@@ -32,9 +32,15 @@ import org.xwiki.test.docker.junit5.UITest;
 @UITest
 class AllITs
 {
+     @Nested
+     @DisplayName("Overall URL Shortener UI")
+     class NestedURLShortenerIT extends URLShortenerIT
+     {
+     }
+
     @Nested
-    @DisplayName("Overall URL Shortener UI")
-    class NestedURLShortenerIT extends URLShortenerIT
+    @DisplayName("Duplicate short URLs page")
+    class NestedURLShortenerDuplicatesPageIT extends URLShortenerDuplicatesPageIT
     {
     }
 }
