@@ -228,35 +228,35 @@
     </property>
     <property>
       <code>define('urlshortener-translation-keys', {
-        prefix: 'urlshortener.duplicates.',
-        keys: [
-        'regenerate.inprogress',
-        'regenerate.done',
-        'regenerate.fail',
-        'regenerate.fail.unauthorized',
-        ],
-        });
+  prefix: 'urlshortener.duplicates.',
+  keys: [
+    'regenerate.inprogress',
+    'regenerate.done',
+    'regenerate.fail',
+    'regenerate.fail.unauthorized',
+  ],
+});
 
-        require(['jquery', 'xwiki-l10n!urlshortener-translation-keys', 'purify'], function ($, l10n, purify) {
-        function regenerateURL(element) {
-        element = element.currentTarget;
-        const oldPageID = element.getAttribute('data-old-page-id');
-        const pageRef = element.getAttribute('data-page-ref');
-        const postURL = new URL('/xwiki/rest/p/regenerate', window.location.href);
-        postURL.searchParams.set('oldPageID', oldPageID);
-        postURL.searchParams.set('currentDocRef', pageRef);
+require(['jquery', 'xwiki-l10n!urlshortener-translation-keys', 'purify'], function ($, l10n, purify) {
+  function regenerateURL(element) {
+    element = element.currentTarget;
+    const oldPageID = element.getAttribute('data-old-page-id');
+    const pageRef = element.getAttribute('data-page-ref');
+    const postURL = new URL('/xwiki/rest/p/regenerate', window.location.href);
+    postURL.searchParams.set('oldPageID', oldPageID);
+    postURL.searchParams.set('currentDocRef', pageRef);
 
-        let notification = new XWiki.widgets.Notification(purify.sanitize(l10n['regenerate.inprogress']), 'inprogress');
-        $.post(postURL, {}).done(function(response) {
-        notification.replace(new XWiki.widgets.Notification(purify.sanitize(l10n['regenerate.done']), 'done'));
-        $(element).prop('disabled', 'true');
-        }).fail(function(error) {
-        let failMessage = (error.status == 401) ? l10n['regenerate.fail.unauthorized'] : l10n['regenerate.fail'];
-        notification.replace(new XWiki.widgets.Notification(purify.sanitize(failMessage), 'error'));
-        });
-        };
-        $(document).on('click', '.urlshortener-regenerate-btn', regenerateURL);
-        });</code>
+    let notification = new XWiki.widgets.Notification(purify.sanitize(l10n['regenerate.inprogress']), 'inprogress');
+    $.post(postURL, {}).done(function(response) {
+      notification.replace(new XWiki.widgets.Notification(purify.sanitize(l10n['regenerate.done']), 'done'));
+      $(element).prop('disabled', 'true');
+    }).fail(function(error) {
+      let failMessage = (error.status == 401) ? l10n['regenerate.fail.unauthorized'] : l10n['regenerate.fail'];
+      notification.replace(new XWiki.widgets.Notification(purify.sanitize(failMessage), 'error'));
+    });
+  };
+  $(document).on('click', '.urlshortener-regenerate-btn', regenerateURL);
+});</code>
     </property>
     <property>
       <name>Regenerate URL</name>
