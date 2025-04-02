@@ -36,11 +36,10 @@ import org.xwiki.rest.model.jaxb.Object;
 import org.xwiki.test.docker.junit5.UITest;
 import org.xwiki.test.ui.TestUtils;
 
-import com.xwiki.urlshortener.test.po.URLShortenerDuplicatesPage;
+import com.xwiki.urlshortener.test.po.URLShortenerConflictListPage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Functional tests for the main page of the URL Shortener Application. It contains a list of pages with duplicate short
@@ -53,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     // The Solr store is not ready yet to be installed as extension
     "org.xwiki.platform:xwiki-platform-eventstream-store-solr:14.10",
     "org.xwiki.platform:xwiki-platform-search-solr-query:14.10" })
-class URLShortenerDuplicatesPageIT
+class URLShortenerConflictListPageIT
 {
     public static final LocalDocumentReference URL_SHORTENER_CLASS_REFERENCE =
         new LocalDocumentReference(Arrays.asList("URLShortener", "Code"), "URLShortenerClass");
@@ -78,7 +77,9 @@ class URLShortenerDuplicatesPageIT
     void setup(TestUtils testUtils)
     {
         tearDown(testUtils);
-        testUtils.createUserAndLogin("alice", "pass", "usertype", "Advanced");
+        testUtils.loginAsSuperAdmin();
+        testUtils.setGlobalRights("XWiki.XWikiAdminGroup", "", "admin", true);
+        testUtils.createAdminUser();
         testPagesList.keySet().forEach((pageReference) -> {
             testUtils.createPage("Space", pageReference.getName(), "", pageReference.getName());
             testUtils.updateObject(pageReference, URL_SHORTENER_CLASS_REFERENCE.toString(), 0, "pageID",
@@ -95,27 +96,34 @@ class URLShortenerDuplicatesPageIT
 
     @Test
     @Order(1)
-    void duplicateURLPagesListNoSubwikis()
+    void URLConflictListNoSubwikis(TestUtils testUtils)
     {
-        URLShortenerDuplicatesPage urlShortenerDuplicatesPage = URLShortenerDuplicatesPage.gotoPage();
-        Map<String, List<String>> criticalDuplicateMap = urlShortenerDuplicatesPage.getCriticalDuplicateURLs();
-        assertEquals(Set.of("12345", "54321"), criticalDuplicateMap.keySet());
+        testUtils.loginAsAdmin();
+        URLShortenerConflictListPage urlShortenerConflictsPage = URLShortenerConflictListPage.gotoPage();
+        Map<String, List<String>> conflictsMap = urlShortenerConflictsPage.getConflictsMap();
+        assertEquals(Set.of("12345", "54321"), conflictsMap.keySet());
         assertEquals(Set.of(test1Reference.toString(), test2Reference.toString()),
-            Set.of(criticalDuplicateMap.get("12345").toArray()));
+            Set.of(conflictsMap.get("12345").toArray()));
         assertEquals(Set.of(test3Reference.toString(), test4Reference.toString(), test5Reference.toString()),
-            Set.of(criticalDuplicateMap.get("54321").toArray()));
+            Set.of(conflictsMap.get("54321").toArray()));
 
-        Map<String, List<String>> potentialDuplicateMap = urlShortenerDuplicatesPage.getPotentialDuplicateURLs();
-        assertTrue(potentialDuplicateMap.isEmpty());
+        // Since all pages are on the same subwiki, all conflicts are critical.
+        for (String pageId : conflictsMap.keySet()) {
+            for (String pageRef : conflictsMap.get(pageId)) {
+                assertEquals(URLShortenerConflictListPage.ConflictType.CRITICAL,
+                    urlShortenerConflictsPage.getConflictType(pageId, pageRef));
+            }
+        }
     }
 
     @Test
     @Order(2)
-    void duplicateURLRegenerate(TestUtils testUtils) throws Exception
+    void URLConflictRegenerate(TestUtils testUtils) throws Exception
     {
-        URLShortenerDuplicatesPage urlShortenerDuplicatesPage = URLShortenerDuplicatesPage.gotoPage();
-        urlShortenerDuplicatesPage.regenerateId("12345", test1Reference.toString());
-        testUtils.getDriver().waitUntilElementIsVisible(By.className("xnotification-done"));
+        testUtils.loginAsAdmin();
+        URLShortenerConflictListPage urlShortenerConflictsPage = URLShortenerConflictListPage.gotoPage();
+        urlShortenerConflictsPage.regenerateId("12345", test1Reference.toString());
+        testUtils.getDriver().waitUntilElementIsVisible(By.cssSelector(".xnotification-done"));
         // Check that the URL was changed.
         Object urlShortenerObject =
             testUtils.rest().get(new ObjectReference("URLShortener.Code.URLShortenerClass[0]", test1Reference));
@@ -125,30 +133,25 @@ class URLShortenerDuplicatesPageIT
 
     @Test
     @Order(3)
-    void duplicateURLRegenerateNoEditRights(TestUtils testUtils) throws Exception
+    void URLConflictRegenerateNoAdmin(TestUtils testUtils)
     {
-        testUtils.addObject("Space", test4Reference.getName(), "XWiki.XWikiRights", "levels", "Edit", "users",
-            "XWiki.NoEditUser", "allow", "Deny");
-        testUtils.createUserAndLogin("NoEditUser", "pass");
-        URLShortenerDuplicatesPage urlShortenerDuplicatesPage = URLShortenerDuplicatesPage.gotoPage();
-        urlShortenerDuplicatesPage.regenerateId("54321", test4Reference.toString());
-        testUtils.getDriver().waitUntilElementIsVisible(By.className("xnotification-error"));
-        // Check that the URL was not changed.
-        Object urlShortenerObject =
-            testUtils.rest().get(new ObjectReference("URLShortener.Code.URLShortenerClass[0]", test4Reference));
-        String pageIdValue = urlShortenerObject.getProperties().get(0).getValue();
-        assertEquals("54321", pageIdValue);
+        testUtils.setRights(new DocumentReference("wiki", "URLShortener", "ConflictList"), "", "XWiki.alice", "edit",
+            false);
+        testUtils.createUserAndLogin("alice", "pass");
+        URLShortenerConflictListPage.gotoPage();
+        assertEquals(0,
+            testUtils.getDriver().findElements(By.cssSelector("button.btn.urlshortener-regenerate-btn")).size());
     }
 
     private void waitUntilSolrReindex(TestUtils testUtils)
     {
-        URLShortenerDuplicatesPage.gotoPage();
+        URLShortenerConflictListPage.gotoPage();
         // Make sure solr picks up the new pages.
         for (int i = 0; i < 5; ++i) {
             System.out.println("[Waiting for Solr reindex] Attempt " + i);
             testUtils.getDriver().navigate().refresh();
             try {
-                if (!new URLShortenerDuplicatesPage().getCriticalDuplicateURLs().isEmpty()) {
+                if (!new URLShortenerConflictListPage().getConflictsMap().isEmpty()) {
                     break;
                 }
                 testUtils.getDriver().waitUntilCondition(driver -> false);

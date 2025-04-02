@@ -39,8 +39,8 @@ class AllITs
      }
 
     @Nested
-    @DisplayName("Duplicate short URLs page")
-    class NestedURLShortenerDuplicatesPageIT extends URLShortenerDuplicatesPageIT
+    @DisplayName("Short URL conflicts page")
+    class NestedURLShortenerConflictListPageIT extends URLShortenerConflictListPageIT
     {
     }
 }
