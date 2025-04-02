@@ -32,8 +32,12 @@ import org.openqa.selenium.By;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.LocalDocumentReference;
 import org.xwiki.model.reference.ObjectReference;
+import org.xwiki.repository.test.SolrTestUtils;
 import org.xwiki.rest.model.jaxb.Object;
+import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.UITest;
+import org.xwiki.test.docker.junit5.servletengine.ServletEngine;
+import org.xwiki.test.integration.XWikiExecutor;
 import org.xwiki.test.ui.TestUtils;
 
 import com.xwiki.urlshortener.test.po.URLShortenerConflictListPage;
@@ -74,9 +78,8 @@ class URLShortenerConflictListPageIT
             test4Reference, "54321", test5Reference, "54321");
 
     @BeforeAll
-    void setup(TestUtils testUtils)
+    void setup(TestUtils testUtils, TestConfiguration testConfiguration) throws Exception
     {
-        tearDown(testUtils);
         testUtils.loginAsSuperAdmin();
         testUtils.setGlobalRights("XWiki.XWikiAdminGroup", "", "admin", true);
         testUtils.createAdminUser();
@@ -85,7 +88,7 @@ class URLShortenerConflictListPageIT
             testUtils.updateObject(pageReference, URL_SHORTENER_CLASS_REFERENCE.toString(), 0, "pageID",
                 testPagesList.get(pageReference));
         });
-        waitUntilSolrReindex(testUtils);
+        waitUntilSolrReindex(testUtils, testConfiguration);
     }
 
     @AfterAll
@@ -143,20 +146,17 @@ class URLShortenerConflictListPageIT
             testUtils.getDriver().findElements(By.cssSelector("button.btn.urlshortener-regenerate-btn")).size());
     }
 
-    private void waitUntilSolrReindex(TestUtils testUtils)
+    private String computedHostURL(TestConfiguration testConfiguration)
     {
-        URLShortenerConflictListPage.gotoPage();
-        // Make sure solr picks up the new pages.
-        for (int i = 0; i < 5; ++i) {
-            System.out.println("[Waiting for Solr reindex] Attempt " + i);
-            testUtils.getDriver().navigate().refresh();
-            try {
-                if (!new URLShortenerConflictListPage().getConflictsMap().isEmpty()) {
-                    break;
-                }
-                testUtils.getDriver().waitUntilCondition(driver -> false);
-            } catch (Throwable ignored) {
-            }
-        }
+        ServletEngine servletEngine = testConfiguration.getServletEngine();
+        return String.format("http://%s:%d%s", servletEngine.getIP(), servletEngine.getPort(),
+            XWikiExecutor.DEFAULT_CONTEXT);
+    }
+
+    private void waitUntilSolrReindex(TestUtils testUtils, TestConfiguration testConfiguration) throws Exception
+    {
+        System.out.println("Waiting for solr to finish indexing. This may take a while...");
+        new SolrTestUtils(testUtils, computedHostURL(testConfiguration)).waitEmpyQueue();
+        System.out.println("Solr indexing finished.");
     }
 }

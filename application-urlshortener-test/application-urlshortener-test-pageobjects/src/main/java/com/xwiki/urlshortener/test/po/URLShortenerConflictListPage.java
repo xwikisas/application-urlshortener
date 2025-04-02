@@ -41,10 +41,6 @@ public class URLShortenerConflictListPage extends ViewPage
         POTENTIAL
     }
 
-    public URLShortenerConflictListPage()
-    {
-    }
-
     static public URLShortenerConflictListPage gotoPage()
     {
         getUtil().gotoPage("URLShortener", "ConflictList");
@@ -54,10 +50,9 @@ public class URLShortenerConflictListPage extends ViewPage
     public final Map<String, List<String>> getConflictsMap()
     {
         return getDriver().findElement(By.cssSelector("section#urlshortener-conflicts-section"))
-            .findElements(By.tagName("section")).stream().collect(Collectors.toMap(
+            .findElements(By.xpath(".//section")).stream().collect(Collectors.toMap(
                 (webElement) -> webElement.findElement(
-                        By.cssSelector("tr:has(.urlshortener-conflicts-table-hierarchy)"))
-                    .getAttribute("data-old-page-id"),
+                    By.cssSelector("tr:has(.urlshortener-conflicts-table-hierarchy)")).getAttribute("data-old-page-id"),
                 (webElement) -> webElement.findElements(
                         By.cssSelector("tr:has(.urlshortener-conflicts-table-hierarchy)")).stream()
                     .map((trElement) -> trElement.getAttribute("data-page-ref")).collect(Collectors.toList())));
