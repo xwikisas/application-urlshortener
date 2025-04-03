@@ -37,4 +37,10 @@ class AllITs
     class NestedURLShortenerIT extends URLShortenerIT
     {
     }
+
+    @Nested
+    @DisplayName("Short URL conflicts page")
+    class NestedURLShortenerConflictListPageIT extends URLShortenerConflictListPageIT
+    {
+    }
 }

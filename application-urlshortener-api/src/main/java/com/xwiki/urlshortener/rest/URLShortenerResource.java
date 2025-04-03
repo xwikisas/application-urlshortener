@@ -67,4 +67,18 @@ public interface URLShortenerResource extends XWikiRestComponent
     @POST
     @Path("/create")
     Response createShortenedURL(@QueryParam("currentDocRef") String currentDocRef) throws Exception;
+
+    /**
+     * Replace the given pageID for the given document with a newly generated one, if the current user has at least edit
+     * rights on it.
+     *
+     * @param currentDocRef current document reference, as {@code String}
+     * @param oldPageID the pageID to be replaced, as {@code String}
+     * @return the created ID for the given document
+     * @throws Exception if an error occurs while editing and saving the ID
+     */
+    @POST
+    @Path("/regenerate")
+    Response regenerateShortenedURL(@QueryParam("currentDocRef") String currentDocRef,
+        @QueryParam("oldPageID") String oldPageID) throws Exception;
 }
