@@ -41,51 +41,47 @@
 {{/warning}}
 
 {{translation key="urlshortener.conflicts.description"/}}
-
-
 {{velocity output="false"}}
 #template('hierarchy_macros.vm')
 #macro (makeConflictsSection $map)
   {{html}}
-  #set ($dummyString = '')
   #set ($noPagesDisplayed = true)
   #foreach ($pageID in $map.keySet())
-    #if ($map.get($pageID).get('size') &gt; 1)
+    #set ($nrPages = 0)
+    #foreach ($subwikiPages in $map.get($pageID).values())
+      #set ($nrPages = $nrPages + $subwikiPages.size())
+    #end
+    #if ($nrPages > 1)
       #set ($noPagesDisplayed = false)
       &lt;section&gt;
         &lt;h2&gt;
           $escapetool.xml($services.localization.render(
             'urlshortener.conflicts.title.section',
-            [$pageID, $map.get($pageID).get('size')]
+            [$pageID, $nrPages]
           ))
         &lt;/h2&gt;
         &lt;table&gt;
         #foreach ($subwiki in $map.get($pageID).keySet())
-          ## Check to skip the 'size' attribute.
-          #if ($subwiki.class != $dummyString.class)
-            #foreach ($foundDocRef in $map.get($pageID).get($subwiki))
-              &lt;tr data-old-page-id='$escapetool.xml($pageID)' data-page-ref='$escapetool.xml($foundDocRef)'&gt;
-                #if ($hasAdmin)
-                &lt;td&gt;
-                  &lt;button class='btn urlshortener-regenerate-btn'&gt;
-                    $escapetool.xml($services.localization.render('urlshortener.conflicts.regenerate.button'))
-                  &lt;/button&gt;
-                &lt;/td&gt;
-                #end
-                &lt;td&gt;
-                {{/html}}
-                #if ($map.get($pageID).get($subwiki).size() &gt; 1)
-                  $services.icon.render('exclamation')
-                #else
-                  $services.icon.render('warning')
-                #end
-                {{html}}
-                &lt;/td&gt;
-                &lt;td class='urlshortener-conflicts-table-hierarchy'&gt;
-                  #hierarchy($foundDocRef, {})
-                &lt;/td&gt;
-              &lt;/tr&gt;
-            #end
+          #foreach ($foundDocRef in $map.get($pageID).get($subwiki))
+            &lt;tr data-old-page-id='$escapetool.xml($pageID)' data-page-ref='$escapetool.xml($foundDocRef)'&gt;
+              #if ($hasAdmin)
+              &lt;td&gt;
+                &lt;button class='btn urlshortener-regenerate-btn'&gt;
+                  $escapetool.xml($services.localization.render('urlshortener.conflicts.regenerate.button'))
+                &lt;/button&gt;
+              &lt;/td&gt;
+              #end
+              &lt;td&gt;
+              #if ($map.get($pageID).get($subwiki).size() &gt; 1)
+                $services.icon.renderHTML('exclamation')
+              #else
+                $services.icon.renderHTML('warning')
+              #end
+              &lt;/td&gt;
+              &lt;td class='urlshortener-conflicts-table-hierarchy'&gt;
+                #hierarchy($foundDocRef, {})
+              &lt;/td&gt;
+            &lt;/tr&gt;
           #end
         #end
         &lt;/table&gt;
@@ -109,27 +105,23 @@
   #set ($ref = $ref.withoutLocale())
   #foreach ($pageID in $pageIDs)
     #if (!$conflictsMap.keySet().contains($pageID))
-      #set ($discard = $conflictsMap.put($pageID, {$ref.getWikiReference():[$ref], 'size':1}))
+      #set ($discard = $conflictsMap.put($pageID, {$ref.getWikiReference():[$ref]}))
     #elseif (!$conflictsMap.get($pageID).get($ref.getWikiReference()).contains($ref))
       #set ($subwikiMap = $conflictsMap.get($pageID))
       #if (!$subwikiMap.keySet().contains($ref.getWikiReference()))
         #set ($discard = $subwikiMap.put($ref.getWikiReference(), [$ref]))
-        #set ($discard = $subwikiMap.put('size', $subwikiMap.get('size') + 1))
       #elseif (!$subwikiMap.get($ref.getWikiReference()).contains($ref))
         #set ($discard = $subwikiMap.get($ref.getWikiReference()).add($ref))
-        #set ($discard = $subwikiMap.put('size', $subwikiMap.get('size') + 1))
       #end
     #end
   #end
 #end
 {{/velocity}}
-
-{{velocity wiki="true"}}
+{{velocity}}
 ; $services.icon.render('exclamation') : $escapetool.xml($services.localization.render(
   'urlshortener.conflicts.critical.description'))
 ; $services.icon.render('warning') : $escapetool.xml($services.localization.render(
   'urlshortener.conflicts.potential.description'))
-
 
 {{html wiki="true"}}
 &lt;section id='urlshortener-conflicts-section'&gt;
@@ -374,8 +366,8 @@ require(['jquery', 'xwiki-l10n!urlshortener-translation-keys', 'purify'], functi
     </property>
     <property>
       <code>.urlshortener-conflicts-table-hierarchy {
-        width: 100%;
-        }</code>
+  width: 100%;
+}</code>
     </property>
     <property>
       <contentType>CSS</contentType>

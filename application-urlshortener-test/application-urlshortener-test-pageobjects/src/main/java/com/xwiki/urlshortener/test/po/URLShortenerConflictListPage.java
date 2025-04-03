@@ -28,7 +28,8 @@ import org.openqa.selenium.WebElement;
 import org.xwiki.test.ui.po.ViewPage;
 
 /**
- * Actions for interacting with a {@link ViewPage} that has the URL Shortener feature in the options menu.
+ * Actions for interacting with the URLShortener.ConflictList page, which contains the pages with short URL conflicts,
+ * and a way to remedy them.
  *
  * @version $Id$
  * @since 1.0
@@ -61,7 +62,7 @@ public class URLShortenerConflictListPage extends ViewPage
     public WebElement getRow(String pageId, String pageRef)
     {
         return getDriver().findElement(
-            By.cssSelector("tr[data-old-page-id=\"" + pageId + "\"][data-page-ref=\"" + pageRef + "\"]"));
+            By.cssSelector(String.format("tr[data-old-page-id=\"%s\"][data-page-ref=\"%s\"]", pageId, pageRef)));
     }
 
     public final ConflictType getConflictType(String pageId, String pageRef)

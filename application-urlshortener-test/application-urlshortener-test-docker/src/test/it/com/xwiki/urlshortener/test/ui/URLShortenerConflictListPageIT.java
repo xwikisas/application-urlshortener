@@ -46,8 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
- * Functional tests for the main page of the URL Shortener Application. It contains a list of pages with duplicate short
- * URLs, and a means to resolve those situations by regenerating the short URLs.
+ * Verify that the short URLs conflicts page displays the right information, while you can also fix these conflicts.
  *
  * @version $Id$
  * @since 1.2.6
