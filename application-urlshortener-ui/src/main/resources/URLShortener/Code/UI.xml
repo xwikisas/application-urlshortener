@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="URLShortener.Code.UI" locale="">
+<xwikidoc version="1.6" reference="URLShortener.Code.UI" locale="">
   <web>URLShortener.Code</web>
   <name>UI</name>
   <language/>
@@ -141,16 +141,24 @@ require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($
       'currentDocRef': XWiki.Model.serialize(xm.documentReference)
     });
     const computeIDURL = baseURL + '/rest/p/create?' + params;
-    $.post(computeIDURL, params).done(response =&gt; {
-      // The wiki ID is needed only for subwikis, in order to be able to locate the resource after.
-      const wikiId = XWiki.currentWiki == XWiki.mainWiki ? '' : XWiki.currentWiki + '/';
-      const shortenedURL = baseURL + '/short/' + wikiId + response.pageID;
-      navigator.clipboard.writeText(shortenedURL).then(() =&gt; {
-        new XWiki.widgets.Notification(l10n['done'], 'done');
-      })
-    }).fail(error =&gt; {
-      console.log(error);
-      new XWiki.widgets.Notification(l10n['fail'], 'error');
+    $.ajax({
+      url: computeIDURL,
+      type: 'POST',
+      data: params,
+      contentType: 'application/json',
+      dataType: 'json',
+      success: function(response) {
+        // The wiki ID is needed only for subwikis, in order to be able to locate the resource after.
+        const wikiId = XWiki.currentWiki == XWiki.mainWiki ? '' : XWiki.currentWiki + '/';
+        const shortenedURL = baseURL + '/short/' + wikiId + response.pageID;
+        navigator.clipboard.writeText(shortenedURL).then(() =&gt; {
+          new XWiki.widgets.Notification(l10n['done'], 'done');
+        })
+      },
+      error: function(error) {
+        console.log(error);
+        new XWiki.widgets.Notification(l10n['fail'], 'error');
+      }
     });
   };
 
@@ -220,7 +228,7 @@ require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages'], function($
         <separators>|, </separators>
         <size>5</size>
         <unmodifiable>0</unmodifiable>
-        <values>action=Action|doc.reference=Document|icon.theme=Icon theme|locale=Language|rendering.defaultsyntax=Default syntax|rendering.restricted=Restricted|rendering.targetsyntax=Target syntax|request.base=Request base URL|request.cookies|request.headers|request.parameters=Request parameters|request.remoteAddr|request.url=Request URL|request.wiki=Request wiki|user=User|wiki=Wiki</values>
+        <values>action=Action|doc.reference=Document|doc.revision|icon.theme=Icon theme|locale=Language|rendering.defaultsyntax=Default syntax|rendering.restricted=Restricted|rendering.targetsyntax=Target syntax|request.base=Request base URL|request.cookies|request.headers|request.parameters=Request parameters|request.remoteAddr|request.session|request.url=Request URL|request.wiki=Request wiki|sheet|user=User|wiki=Wiki</values>
         <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
       </async_context>
       <async_enabled>
