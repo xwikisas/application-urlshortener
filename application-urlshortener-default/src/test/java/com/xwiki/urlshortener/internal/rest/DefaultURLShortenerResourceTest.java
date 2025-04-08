@@ -134,6 +134,7 @@ public class DefaultURLShortenerResourceTest
     {
         when(xcontextProvider.get()).thenReturn(xcontext);
         when(xcontext.getWiki()).thenReturn(xwiki);
+        when(document.clone()).thenReturn(document);
     }
 
     /**
