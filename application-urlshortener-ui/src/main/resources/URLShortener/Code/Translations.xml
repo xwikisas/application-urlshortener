@@ -39,7 +39,22 @@
   <content>urlshortener.menu.button.title=Get shortened URL
 urlshortener.menu.action.done=URL copied to clipboard
 urlshortener.menu.action.fail=An error occurred while creating the shortened URL.
-urlshortener.menu.action.shortcut=Alt+u</content>
+urlshortener.menu.action.shortcut=Alt+u
+
+
+urlshortener.conflicts.none=No pages with short URL conflicts found.
+urlshortener.conflicts.title=Pages with short URL conflicts
+urlshortener.conflicts.description=It is possible to reach states where certain pages have the same short URLs, meaning that only one page will be accessible using that short URL. This page offers a list of such pages for easy remediation. Conflicts with pages which you do not have View Rights on are not shown here.\n\nNote that some pages are listed as potential conflicts. Because the short URL contains the subwiki of a page, these pages work fine right now. But if they are moved between subwikis, then they will become conflicts.
+urlshortener.conflicts.critical.description=These short URLs override each other, preventing access to some pages.
+urlshortener.conflicts.potential.description=These short URLs are not currently causing issues, but could override other pages if moved between subwikis.
+urlshortener.conflicts.title.section=Pages with pageID = {0} ({1} pages)
+urlshortener.conflicts.warning.slow=This page might be slow when SOLR is reindexing or when there are many short URLs registered.
+urlshortener.conflicts.regenerate.button=Regenerate URL
+urlshortener.conflicts.regenerate.inprogress=Updating short URL...
+urlshortener.conflicts.regenerate.done=Short URL updated
+urlshortener.conflicts.regenerate.fail=Something went wrong
+urlshortener.conflicts.regenerate.fail.unauthorized=Insufficient rights
+</content>
   <object>
     <name>URLShortener.Code.Translations</name>
     <number>0</number>
