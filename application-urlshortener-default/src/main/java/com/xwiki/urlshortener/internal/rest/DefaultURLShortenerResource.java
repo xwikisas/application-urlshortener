@@ -127,7 +127,7 @@ public class DefaultURLShortenerResource implements URLShortenerResource
 
         if (authorization.hasAccess(Right.VIEW, documentReference)) {
             XWikiDocument currentDoc = xcontext.getWiki().getDocument(documentReference, xcontext);
-            String pageID = addURLShortenerXObject(currentDoc);
+            String pageID = addURLShortenerXObject(currentDoc.clone());
             if (pageID == null || pageID.isEmpty()) {
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }

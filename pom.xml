@@ -29,7 +29,7 @@
   </parent>
   <groupId>com.xwiki.urlshortener</groupId>
   <artifactId>application-urlshortener</artifactId>
-  <version>1.2.5-SNAPSHOT</version>
+  <version>1.2.6-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>URL Shortener Application (Pro) Parent POM</name>
   <description>URL Shortener</description>
