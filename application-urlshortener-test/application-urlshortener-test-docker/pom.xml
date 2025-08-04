@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.xwiki.urlshortener</groupId>
     <artifactId>application-urlshortener-test</artifactId>
-    <version>1.2.5-SNAPSHOT</version>
+    <version>1.2.7-SNAPSHOT</version>
   </parent>
   <artifactId>application-urlshortener-test-docker</artifactId>
   <name>URL Shortener Application - Tests - Functional Docker Tests</name>
@@ -74,30 +74,6 @@
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-platform-search-solr-test-utils</artifactId>
       <version>${platform.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- Remove when licensing application has the parent to 14.10. -->
-    <dependency>
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-model-api</artifactId>
-      <version>${platform.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.commons</groupId>
-      <artifactId>xwiki-commons-extension-api</artifactId>
-      <version>${commons.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-      <version>3.0.2</version>
-    </dependency>
-    <!-- Remove to here -->
-    <dependency>
-      <groupId>com.xwiki.licensing</groupId>
-      <artifactId>application-licensing-test-dependencies</artifactId>
-      <version>${licensing.version}</version>
-      <type>pom</type>
       <scope>test</scope>
     </dependency>
     <dependency>

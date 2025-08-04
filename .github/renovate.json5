@@ -17,30 +17,27 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package com.xwiki.urlshortener.test.ui;
+ {
+  // We want all suggestions right away
+  "prHourlyLimit" : 0,
+  "prConcurrentLimit" : 0,
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.xwiki.test.docker.junit5.UITest;
+  // Skip Eclipse M2E special setup "dependency"
+  "ignoreDeps": ["org.eclipse.m2e:lifecycle-mapping"],
 
-/**
- * All UI tests for the URL Shortener application.
- *
- * @version $Id$
- * @since 1.0
- */
-@UITest
-class AllITs
-{
-    @Nested
-    @DisplayName("Overall URL Shortener UI")
-    class NestedURLShortenerIT extends URLShortenerIT
+  "packageRules": [
+    // Indicate the URL to the XWiki org and xwikisas Nexus public proxy for non-Central Maven dependencies
     {
-    }
+      "matchDatasources": ["maven"],
+      "registryUrls": ["https://nexus.xwiki.org/nexus/content/repositories/public/",
+        "https://nexus.xwikisas.com/nexus/content/repositories/public-store-releases/"]
+    },
 
-    @Nested
-    @DisplayName("Short URL conflicts page")
-    class NestedURLShortenerConflictListPageIT extends URLShortenerConflictListPageIT
+    // There is always a more recent version of contrib parent or commons/rendering/platform and we don't want to upgrade just for that
     {
+      "matchPackagePrefixes": ["org.xwiki.commons:", "org.xwiki.rendering:", "org.xwiki.platform:", "org.xwiki.enterprise:",
+        "com.xwiki.parent:"],
+      "enabled": false
     }
+  ]
 }

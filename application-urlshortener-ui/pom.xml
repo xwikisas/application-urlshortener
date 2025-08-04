@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.xwiki.urlshortener</groupId>
     <artifactId>application-urlshortener</artifactId>
-    <version>1.2.5-SNAPSHOT</version>
+    <version>1.2.7-SNAPSHOT</version>
   </parent>
   <artifactId>application-urlshortener-ui</artifactId>
   <packaging>xar</packaging>
@@ -62,6 +62,13 @@
     <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>jquery</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.webjars.npm/dompurify -->
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>dompurify</artifactId>
+      <version>3.1.5</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
