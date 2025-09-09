@@ -24,7 +24,7 @@
   <parent>
     <groupId>com.xwiki.urlshortener</groupId>
     <artifactId>application-urlshortener</artifactId>
-    <version>1.2.7</version>
+    <version>1.2.8-SNAPSHOT</version>
   </parent>
   <artifactId>application-urlshortener-default</artifactId>
   <packaging>jar</packaging>
