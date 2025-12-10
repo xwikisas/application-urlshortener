@@ -144,7 +144,6 @@ require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages', 'purify'], 
     $.ajax({
       url: computeIDURL,
       type: 'POST',
-      data: params,
       contentType: 'application/json',
       dataType: 'json',
       success: function(response) {
