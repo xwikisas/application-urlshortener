@@ -51,7 +51,7 @@
     #foreach ($subwikiPages in $map.get($pageID).values())
       #set ($nrPages = $nrPages + $subwikiPages.size())
     #end
-    #if ($nrPages > 1)
+    #if ($nrPages &gt; 1)
       #set ($noPagesDisplayed = false)
       &lt;section&gt;
         &lt;h2&gt;
