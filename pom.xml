@@ -50,6 +50,7 @@
     <module>application-urlshortener-api</module>
     <module>application-urlshortener-default</module>
     <module>application-urlshortener-ui</module>
+    <module>application-urlshortener-xip</module>
   </modules>
   <profiles>
     <profile>
