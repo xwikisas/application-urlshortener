@@ -19,6 +19,7 @@
  */
 package com.xwiki.urlshortener.internal;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +30,8 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
@@ -118,8 +121,13 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
 
             if (null != documentReference) {
                 XWikiContext xcontext = xcontextProvider.get();
-                String stringURL = xcontext.getWiki().getURL(documentReference, xcontext);
+                // Preserve query parameters from the shortened URL request.
+                String queryString = URLEncodedUtils.format(urlResourceReference.getParameters().entrySet().stream()
+                    .flatMap(
+                        entry -> entry.getValue().stream().map(value -> new BasicNameValuePair(entry.getKey(), value)))
+                    .collect(Collectors.toList()), StandardCharsets.UTF_8);
 
+                String stringURL = xcontext.getWiki().getURL(documentReference, "view", queryString, "", xcontext);
                 // Let the redirect action to check the view right on the document.
                 response.sendRedirect(stringURL);
             } else {
