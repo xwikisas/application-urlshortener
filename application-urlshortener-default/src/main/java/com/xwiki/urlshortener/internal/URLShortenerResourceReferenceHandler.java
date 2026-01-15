@@ -19,11 +19,9 @@
  */
 package com.xwiki.urlshortener.internal;
 
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -32,6 +30,8 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
@@ -121,12 +121,13 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
 
             if (null != documentReference) {
                 XWikiContext xcontext = xcontextProvider.get();
-                String stringURL = xcontext.getWiki().getURL(documentReference, xcontext);
                 // Preserve query parameters from the shortened URL request.
-                String queryString = buildQueryString(urlResourceReference.getParameters());
-                if (!queryString.isEmpty()) {
-                    stringURL += "?" + queryString;
-                }
+                String queryString = URLEncodedUtils.format(urlResourceReference.getParameters().entrySet().stream()
+                    .flatMap(
+                        entry -> entry.getValue().stream().map(value -> new BasicNameValuePair(entry.getKey(), value)))
+                    .collect(Collectors.toList()), StandardCharsets.UTF_8);
+
+                String stringURL = xcontext.getWiki().getURL(documentReference, "view", queryString, "", xcontext);
                 // Let the redirect action to check the view right on the document.
                 response.sendRedirect(stringURL);
             } else {
@@ -139,27 +140,6 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         }
 
         chain.handleNext(reference);
-    }
-
-    private String buildQueryString(Map<String, List<String>> parameters)
-    {
-        if (parameters.isEmpty()) {
-            return "";
-        }
-
-        StringBuilder queryString = new StringBuilder();
-        for (Map.Entry<String, List<String>> entry : parameters.entrySet()) {
-            String key = entry.getKey();
-            for (String value : entry.getValue()) {
-                if (queryString.length() > 0) {
-                    queryString.append("&");
-                }
-                queryString.append(URLEncoder.encode(key, StandardCharsets.US_ASCII));
-                queryString.append("=");
-                queryString.append(URLEncoder.encode(value, StandardCharsets.US_ASCII));
-            }
-        }
-        return queryString.toString();
     }
 
     private List<?> getURLShortenerObjectWithIDOnAnyWiki(URLShortenerResourceReference resourceReference)

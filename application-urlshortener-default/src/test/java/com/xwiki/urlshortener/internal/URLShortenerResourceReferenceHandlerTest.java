@@ -133,14 +133,16 @@ public class URLShortenerResourceReferenceHandlerTest
         when(query.execute()).thenReturn(Collections.singletonList(docRef));
 
         String docURL = "docURL";
-        when(xwiki.getURL(documentReference, xcontext)).thenReturn(docURL);
+        when(xwiki.getURL(eq(documentReference), any(String.class), any(String.class), any(String.class),
+            eq(xcontext))).thenReturn(docURL);
 
         URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
         resourceReference.addParameter("test", "testValue1");
         resourceReference.addParameter("test", "testValue2%3A");
         resourceReferenceHandler.handle(resourceReference, handlerChain);
 
-        verify(httpServletServletResponse, times(1)).sendRedirect(docURL + "?test=testValue1&test=testValue2%253A");
+        verify(xwiki, times(1)).getURL(documentReference, "view", "test=testValue1&test=testValue2%253A", "", xcontext);
+        verify(httpServletServletResponse, times(1)).sendRedirect(docURL);
     }
 
     @Test
@@ -159,7 +161,8 @@ public class URLShortenerResourceReferenceHandlerTest
         when(query.execute()).thenReturn(Collections.singletonList(docRef));
 
         String docURL = "docURL";
-        when(xwiki.getURL(documentReference, xcontext)).thenReturn(docURL);
+        when(xwiki.getURL(eq(documentReference), any(String.class), any(String.class), any(String.class),
+            eq(xcontext))).thenReturn(docURL);
 
         URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
         resourceReferenceHandler.handle(resourceReference, handlerChain);
@@ -183,7 +186,8 @@ public class URLShortenerResourceReferenceHandlerTest
         when(query.execute()).thenReturn(Collections.singletonList(docRef));
 
         String docURL = "docURL";
-        when(xwiki.getURL(documentReference, xcontext)).thenReturn(docURL);
+        when(xwiki.getURL(eq(documentReference), any(String.class), any(String.class), any(String.class),
+            eq(xcontext))).thenReturn(docURL);
 
         URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
         resourceReferenceHandler.handle(resourceReference, handlerChain);
@@ -219,7 +223,8 @@ public class URLShortenerResourceReferenceHandlerTest
         when(documentReferenceResolver.resolve(any())).thenReturn(documentReference);
 
         String docURL = "docURL";
-        when(xwiki.getURL(documentReference, xcontext)).thenReturn(docURL);
+        when(xwiki.getURL(eq(documentReference), any(String.class), any(String.class), any(String.class),
+            eq(xcontext))).thenReturn(docURL);
 
         URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
         resourceReferenceHandler.handle(resourceReference, handlerChain);
