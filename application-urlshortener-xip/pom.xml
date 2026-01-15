@@ -30,7 +30,7 @@
 
   <name>URL Shortener Application (Pro) - XIP</name>
   <packaging>xip</packaging>
-  <description>XIP for offline installation of the YOUR APP NAME</description>
+  <description>Package containing everything needed to install URL Shortener Application (Pro) offline.</description>
   <dependencies>
     <dependency>
       <groupId>com.xwiki.urlshortener</groupId>
