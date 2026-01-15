@@ -19,8 +19,11 @@
  */
 package com.xwiki.urlshortener.internal;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -119,7 +122,11 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
             if (null != documentReference) {
                 XWikiContext xcontext = xcontextProvider.get();
                 String stringURL = xcontext.getWiki().getURL(documentReference, xcontext);
-
+                // Preserve query parameters from the shortened URL request.
+                String queryString = buildQueryString(urlResourceReference.getParameters());
+                if (!queryString.isEmpty()) {
+                    stringURL += "?" + queryString;
+                }
                 // Let the redirect action to check the view right on the document.
                 response.sendRedirect(stringURL);
             } else {
@@ -132,6 +139,27 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         }
 
         chain.handleNext(reference);
+    }
+
+    private String buildQueryString(Map<String, List<String>> parameters)
+    {
+        if (parameters.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder queryString = new StringBuilder();
+        for (Map.Entry<String, List<String>> entry : parameters.entrySet()) {
+            String key = entry.getKey();
+            for (String value : entry.getValue()) {
+                if (queryString.length() > 0) {
+                    queryString.append("&");
+                }
+                queryString.append(URLEncoder.encode(key, StandardCharsets.US_ASCII));
+                queryString.append("=");
+                queryString.append(URLEncoder.encode(value, StandardCharsets.US_ASCII));
+            }
+        }
+        return queryString.toString();
     }
 
     private List<?> getURLShortenerObjectWithIDOnAnyWiki(URLShortenerResourceReference resourceReference)
