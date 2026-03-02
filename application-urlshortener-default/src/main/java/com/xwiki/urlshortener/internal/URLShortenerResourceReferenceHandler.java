@@ -32,19 +32,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.client.solrj.util.ClientUtils;
-import org.apache.solr.common.SolrDocument;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.DocumentReferenceResolver;
-import org.xwiki.model.reference.EntityReferenceSerializer;
-import org.xwiki.model.reference.WikiReference;
-import org.xwiki.query.Query;
-import org.xwiki.query.QueryException;
-import org.xwiki.query.QueryManager;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
@@ -52,6 +43,7 @@ import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
 
 import com.xpn.xwiki.XWikiContext;
+import com.xwiki.urlshortener.URLShortenerManager;
 
 /**
  * URL Resource Handler for redirecting from a shortened URL to the actual document, which is uniquely identified by an
@@ -71,23 +63,13 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
     public static final String PAGE_ID = "pageID";
 
     @Inject
-    private QueryManager queryManager;
-
-    @Inject
-    @Named("current")
-    private DocumentReferenceResolver<String> documentReferenceResolver;
-
-    @Inject
-    private DocumentReferenceResolver<SolrDocument> solrDocumentReferenceResolver;
-
-    @Inject
     private Provider<XWikiContext> xcontextProvider;
 
     @Inject
-    private EntityReferenceSerializer<String> serializer;
+    private Container container;
 
     @Inject
-    private Container container;
+    private URLShortenerManager urlShortenerManager;
 
     @Override
     public List<ResourceType> getSupportedResourceReferences()
@@ -102,23 +84,9 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
             URLShortenerResourceReference urlResourceReference = (URLShortenerResourceReference) reference;
-            DocumentReference documentReference = null;
-            List<?> results = getURLShortenerObjectWithID(urlResourceReference);
-
-            if (!results.isEmpty()) {
-                documentReference = documentReferenceResolver.resolve((String) results.get(0));
-                if (!urlResourceReference.getWikiId().isEmpty()) {
-                    documentReference =
-                        documentReference.setWikiReference(new WikiReference(urlResourceReference.getWikiId()));
-                }
-            } else {
-                // If no short url is found on the given subwiki, try to find the pageID in all subwikis.
-                results = getURLShortenerObjectWithIDOnAnyWiki(urlResourceReference);
-                if (!results.isEmpty()) {
-                    documentReference = documentReferenceResolver.resolve((String) results.get(0));
-                }
-            }
-
+            DocumentReference documentReference =
+                urlShortenerManager.getDocumentReference(urlResourceReference.getWikiId(),
+                    urlResourceReference.getPageId());
             if (null != documentReference) {
                 XWikiContext xcontext = xcontextProvider.get();
                 // Preserve query parameters from the shortened URL request.
@@ -140,37 +108,5 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         }
 
         chain.handleNext(reference);
-    }
-
-    private List<?> getURLShortenerObjectWithIDOnAnyWiki(URLShortenerResourceReference resourceReference)
-        throws QueryException
-    {
-        // Note that the query is very slow when solr is reindexing.
-        // Also, for newly added URLShortener objects, SOLR takes some moments to update with its value. So this SOLR
-        // query might also return null if it didn't finish updating the index.
-        String statement = "property.URLShortener.Code.URLShortenerClass.pageID:" + ClientUtils.escapeQueryChars(
-            resourceReference.getPageId());
-        Query query = this.queryManager.createQuery(statement, "solr").setLimit(1);
-        QueryResponse response = (QueryResponse) query.execute().get(0);
-        List<?> queryResults = response.getResults().stream()
-            .map((SolrDocument doc) -> serializer.serialize(solrDocumentReferenceResolver.resolve(doc)))
-            .collect(Collectors.toList());
-        return queryResults;
-    }
-
-    private List<?> getURLShortenerObjectWithID(URLShortenerResourceReference resourceReference) throws QueryException
-    {
-        String statement =
-            "select distinct doc.fullName from Document as doc, doc.object('URLShortener.Code.URLShortenerClass') as "
-                + "obj where obj.pageID = :pageID";
-        Query query =
-            this.queryManager.createQuery(statement, Query.XWQL).bindValue(PAGE_ID, resourceReference.getPageId())
-                .setLimit(1);
-        // An empty wiki means we are on the main wiki, which doesn't need to be set on the query because it's the
-        // default.
-        if (!resourceReference.getWikiId().isEmpty()) {
-            query = query.setWiki(resourceReference.getWikiId());
-        }
-        return query.execute();
     }
 }
