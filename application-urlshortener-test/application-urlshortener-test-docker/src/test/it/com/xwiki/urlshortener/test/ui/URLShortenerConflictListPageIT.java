@@ -137,9 +137,7 @@ class URLShortenerConflictListPageIT
     @Order(3)
     void URLConflictRegenerateNoAdmin(TestUtils testUtils)
     {
-        testUtils.setRights(new DocumentReference("wiki", "URLShortener", "ConflictList"), "", "XWiki.alice", "edit",
-            false);
-        testUtils.createUserAndLogin("alice", "pass");
+        testUtils.createUserAndLogin("testUser", "pass");
         URLShortenerConflictListPage.gotoPage();
         assertEquals(0,
             testUtils.getDriver().findElements(By.cssSelector("button.btn.urlshortener-regenerate-btn")).size());
