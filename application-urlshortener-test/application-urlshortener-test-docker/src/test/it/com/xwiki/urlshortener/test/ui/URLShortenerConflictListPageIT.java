@@ -53,8 +53,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
  */
 @UITest(extraJARs = {
     // The Solr store is not ready yet to be installed as extension
-    "org.xwiki.platform:xwiki-platform-eventstream-store-solr:14.10",
-    "org.xwiki.platform:xwiki-platform-search-solr-query:14.10" })
+    "org.xwiki.platform:xwiki-platform-eventstream-store-solr:15.10",
+    "org.xwiki.platform:xwiki-platform-search-solr-query:15.10" })
 class URLShortenerConflictListPageIT
 {
     public static final LocalDocumentReference URL_SHORTENER_CLASS_REFERENCE =
@@ -137,9 +137,7 @@ class URLShortenerConflictListPageIT
     @Order(3)
     void URLConflictRegenerateNoAdmin(TestUtils testUtils)
     {
-        testUtils.setRights(new DocumentReference("wiki", "URLShortener", "ConflictList"), "", "XWiki.alice", "edit",
-            false);
-        testUtils.createUserAndLogin("alice", "pass");
+        testUtils.createUserAndLogin("testUser", "pass");
         URLShortenerConflictListPage.gotoPage();
         assertEquals(0,
             testUtils.getDriver().findElements(By.cssSelector("button.btn.urlshortener-regenerate-btn")).size());
@@ -155,7 +153,7 @@ class URLShortenerConflictListPageIT
     private void waitUntilSolrReindex(TestUtils testUtils, TestConfiguration testConfiguration) throws Exception
     {
         System.out.println("Waiting for solr to finish indexing. This may take a while...");
-        new SolrTestUtils(testUtils, computedHostURL(testConfiguration)).waitEmpyQueue();
+        new SolrTestUtils(testUtils, computedHostURL(testConfiguration)).waitEmptyQueue();
         System.out.println("Solr indexing finished.");
     }
 }

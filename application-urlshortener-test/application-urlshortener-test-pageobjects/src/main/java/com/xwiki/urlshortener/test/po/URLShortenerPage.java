@@ -34,7 +34,7 @@ public class URLShortenerPage extends ViewPage
 {
     public WebElement getURLShortenerButton()
     {
-        WebElement menu = getDriver().findElement(By.xpath("//div[@id='tmMoreActions']/a[contains(@role, 'button')]"));
+        WebElement menu = getDriver().findElement(By.xpath("//div[@id='tmMoreActions']/button"));
         menu.click();
 
         String id = "urlShortener";
