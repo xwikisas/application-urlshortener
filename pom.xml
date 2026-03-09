@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.xwiki.parent</groupId>
     <artifactId>xwikisas-parent-platform</artifactId>
-    <version>14.10-1</version>
+    <version>15.10</version>
   </parent>
   <groupId>com.xwiki.urlshortener</groupId>
   <artifactId>application-urlshortener</artifactId>
@@ -34,7 +34,7 @@
   <name>URL Shortener Application (Pro) Parent POM</name>
   <description>URL Shortener</description>
   <properties>
-    <licensing.version>1.31.1</licensing.version>
+    <licensing.version>1.32</licensing.version>
   </properties>
   <issueManagement>
     <system>GitHub</system>

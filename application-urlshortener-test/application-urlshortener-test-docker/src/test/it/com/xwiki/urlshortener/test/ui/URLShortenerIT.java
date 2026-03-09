@@ -43,8 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @UITest(extraJARs = {
     // The Solr store is not ready yet to be installed as extension
-    "org.xwiki.platform:xwiki-platform-eventstream-store-solr:14.10",
-    "org.xwiki.platform:xwiki-platform-search-solr-query:14.10" })
+    "org.xwiki.platform:xwiki-platform-eventstream-store-solr:15.10",
+    "org.xwiki.platform:xwiki-platform-search-solr-query:15.10" })
 class URLShortenerIT
 {
     @Test
