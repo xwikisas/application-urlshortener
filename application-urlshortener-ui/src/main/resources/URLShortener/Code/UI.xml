@@ -137,28 +137,29 @@
 require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages', 'purify'], function($, xm, l10n, purify) {
   let createShortenedURL = function() {
     const baseURL = (new URL(window.location)).origin + XWiki.contextPath;
-    const params = $.param({
-      'currentDocRef': XWiki.Model.serialize(xm.documentReference)
-    });
+    const params = new URLSearchParams({ 'currentDocRef': XWiki.Model.serialize(xm.documentReference) });
     const computeIDURL = baseURL + '/rest/p/create?' + params;
-    $.ajax({
-      url: computeIDURL,
-      type: 'POST',
-      contentType: 'application/json',
-      dataType: 'json',
-      success: function(response) {
-        // The wiki ID is needed only for subwikis, in order to be able to locate the resource after.
-        const wikiId = XWiki.currentWiki == XWiki.mainWiki ? '' : XWiki.currentWiki + '/';
-        const shortenedURL = baseURL + '/short/' + wikiId + response.pageID;
-        navigator.clipboard.writeText(shortenedURL).then(() =&gt; {
-          new XWiki.widgets.Notification(purify.sanitize(l10n['done']), 'done');
-        })
-      },
-      error: function(error) {
-        console.log(error);
-        new XWiki.widgets.Notification(purify.sanitize(l10n['fail']), 'error');
-      }
+
+    const shortenedURLPromise = fetch(computeIDURL, {method: 'POST' }).then(data =&gt; data.json()).then(response =&gt; {
+      // The wiki ID is needed only for subwikis, in order to be able to locate the resource after.
+      const wikiId = XWiki.currentWiki == XWiki.mainWiki ? '' : XWiki.currentWiki + '/';
+      const shortenedURL = baseURL + '/short/' + wikiId + response.pageID;
+      return shortenedURL;
     });
+
+    try {
+      // Safari doesn't allow writing to clipboard after performing an async request, so the fetch request must be
+      // provided as an argument to clipboard.write.
+      navigator.clipboard.write([new ClipboardItem({'text/plain': shortenedURLPromise})]).then(() =&gt; {
+        new XWiki.widgets.Notification(purify.sanitize(l10n['done']), 'done');
+      }).catch(e =&gt; {
+        console.error(e);
+        new XWiki.widgets.Notification(purify.sanitize(l10n['fail']), 'error');
+      });
+    } catch (e) {
+      console.error(e);
+      new XWiki.widgets.Notification(purify.sanitize(l10n['fail']), 'error');
+    }
   };
 
   let createURLShortcut = function() {
