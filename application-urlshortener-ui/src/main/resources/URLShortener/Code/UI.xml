@@ -140,7 +140,8 @@ require(['jquery', 'xwiki-meta', 'xwiki-l10n!urlshortener-messages', 'purify'], 
     const params = new URLSearchParams({ 'currentDocRef': XWiki.Model.serialize(xm.documentReference) });
     const computeIDURL = baseURL + '/rest/p/create?' + params;
 
-    const shortenedURLPromise = fetch(computeIDURL, {method: 'POST' }).then(data =&gt; data.json()).then(response =&gt; {
+    const shortenedURLPromise =
+        fetch(computeIDURL, { method: 'POST' }).then(data =&gt; data.json()).then(response =&gt; {
       // The wiki ID is needed only for subwikis, in order to be able to locate the resource after.
       const wikiId = XWiki.currentWiki == XWiki.mainWiki ? '' : XWiki.currentWiki + '/';
       const shortenedURL = baseURL + '/short/' + wikiId + response.pageID;
