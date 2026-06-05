@@ -38,5 +38,21 @@
   <hidden>true</hidden>
   <content>urlshortener.menu.button.title=Obtenir une URL raccourcie
 urlshortener.menu.action.done=URL copiée dans le presse-papiers
-urlshortener.menu.action.fail=Une erreur s'est produite lors de la création de l'URL raccourcie.</content>
+urlshortener.menu.action.fail=Une erreur s'est produite lors de la création de l'URL raccourcie.
+urlshortener.menu.action.shortcut=Alt+u
+
+
+urlshortener.conflicts.none=Aucune page avec des conflits d'URL courtes trouvées.
+urlshortener.conflicts.title=Pages avec des conflits d'URL courtes
+urlshortener.conflicts.description=Il est possible d'atteindre des états dans lesquels certaines pages ont les mêmes URL courtes, ce qui signifie qu'une seule page sera accessible en utilisant cette URL courte. Cette page offre une liste de ces pages pour faciliter la résolution. Les conflits avec des pages sur lesquelles vous n'avez pas les droits de lecture ne sont pas affichés ici.\n\nNotez que certaines pages sont listées comme des conflits potentiels. Comme l'URL courte contient le sous wiki d'une page, ces pages fonctionnent correctement actuellement. Mais si elles sont déplacées entre sous wikis, alors cela créera un conflit.
+urlshortener.conflicts.critical.description=Ces URLs courtes s'écrasent l'une l'autre, empêchant l'accès à certaines pages.
+urlshortener.conflicts.potential.description=Ces URLs courtes ne créent pas de problème actuellement, mais pourraient écraser d'autres pages, si elles sont déplacées entre sous wikis.
+urlshortener.conflicts.title.section=Pages avec ID de page = {0} ({1} pages)
+urlshortener.conflicts.warning.slow=Cette page peut être lente lorsque SOLR réindexe ou lorsqu'il y a de nombreuses URLs courtes enregistrées.
+urlshortener.conflicts.regenerate.button=Régénérer l'URL
+urlshortener.conflicts.regenerate.inprogress=Mise à jour de l'URL courte...
+urlshortener.conflicts.regenerate.done=URL courte mise à jour
+urlshortener.conflicts.regenerate.fail=Quelque chose s'est mal passé
+urlshortener.conflicts.regenerate.fail.unauthorized=Droits insuffisants
+</content>
 </xwikidoc>
