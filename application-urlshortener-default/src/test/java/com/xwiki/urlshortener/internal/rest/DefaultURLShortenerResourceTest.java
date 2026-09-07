@@ -153,13 +153,43 @@ public class DefaultURLShortenerResourceTest
         when(solrEntityReferenceResolver.resolve(solrDocument, EntityType.DOCUMENT)).thenReturn(docReference);
 
         when(xwiki.getDocument(docReference, xcontext)).thenReturn(document);
+        when(document.getDocumentReference()).thenReturn(new DocumentReference("wiki", "Space", "Page"));
         when(document.getURL("view", xcontext)).thenReturn("myURL");
+        when(authorization.hasAccess(any(Right.class), any(DocumentReference.class))).thenReturn(true);
 
         when(xcontext.getResponse()).thenReturn(xwikiResponse);
 
         Response response = Response.status(301).build();
         Response actual = this.urlShortenerResource.redirect(PAGE_ID_VALUE);
         assertEquals(response.getStatus(), actual.getStatus());
+    }
+
+    /**
+     * Test the case where the user has no view access on the target document.
+     */
+    @Test
+    void redirectWithoutViewAccess() throws Exception
+    {
+        EntityReference docReference = new EntityReference("ref", EntityType.DOCUMENT);
+        SolrDocumentList solrDocumentList = new SolrDocumentList();
+        SolrDocument solrDocument = new SolrDocument();
+        solrDocumentList.add(solrDocument);
+        when(this.queryManager.createQuery(DEFAULT_STATEMENT, "solr")).thenReturn(query);
+        when(query.setLimit(anyInt())).thenReturn(query);
+        when(query.execute()).thenReturn(Collections.singletonList(queryResponse));
+        when(queryResponse.getResults()).thenReturn(solrDocumentList);
+        when(solrEntityReferenceResolver.resolve(solrDocument, EntityType.DOCUMENT)).thenReturn(docReference);
+
+        when(xwiki.getDocument(docReference, xcontext)).thenReturn(document);
+        when(document.getDocumentReference()).thenReturn(new DocumentReference("wiki", "Space", "Page"));
+        when(authorization.hasAccess(any(Right.class), any(DocumentReference.class))).thenReturn(false);
+
+        when(xcontext.getResponse()).thenReturn(xwikiResponse);
+
+        WebApplicationException exception =
+            assertThrows(WebApplicationException.class, () -> this.urlShortenerResource.redirect(PAGE_ID_VALUE));
+        assertEquals(404, exception.getResponse().getStatus());
+        verify(xwikiResponse, times(0)).sendRedirect(any(String.class));
     }
 
     /**

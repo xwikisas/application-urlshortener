@@ -41,6 +41,8 @@ import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
+import org.xwiki.security.authorization.ContextualAuthorizationManager;
+import org.xwiki.security.authorization.Right;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xwiki.urlshortener.URLShortenerManager;
@@ -62,6 +64,11 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
      */
     public static final String PAGE_ID = "pageID";
 
+    /**
+     * No document is associated to the given ID.
+     */
+    public static final String NO_DOCUMENT = "No document is associated to the given ID: [%s]";
+
     @Inject
     private Provider<XWikiContext> xcontextProvider;
 
@@ -70,6 +77,9 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
 
     @Inject
     private URLShortenerManager urlShortenerManager;
+
+    @Inject
+    private ContextualAuthorizationManager authorization;
 
     @Override
     public List<ResourceType> getSupportedResourceReferences()
@@ -89,6 +99,13 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
                     urlResourceReference.getPageId());
             if (null != documentReference) {
                 XWikiContext xcontext = xcontextProvider.get();
+                // Check the view right on the document before emitting the redirect. Return 404 to avoid revealing
+                // whether the document exists or not.
+                if (!authorization.hasAccess(Right.VIEW, documentReference)) {
+                    response.sendError(404, String.format(NO_DOCUMENT, urlResourceReference.getPageId()));
+                    chain.handleNext(reference);
+                    return;
+                }
                 // Preserve query parameters from the shortened URL request.
                 String queryString = URLEncodedUtils.format(urlResourceReference.getParameters().entrySet().stream()
                     .flatMap(
@@ -96,11 +113,9 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
                     .collect(Collectors.toList()), StandardCharsets.UTF_8);
 
                 String stringURL = xcontext.getWiki().getURL(documentReference, "view", queryString, "", xcontext);
-                // Let the redirect action to check the view right on the document.
                 response.sendRedirect(stringURL);
             } else {
-                response.sendError(404,
-                    String.format("No document is associated to the given ID: [%s]", urlResourceReference.getPageId()));
+                response.sendError(404, String.format(NO_DOCUMENT, urlResourceReference.getPageId()));
             }
         } catch (Exception e) {
             throw new ResourceReferenceHandlerException(

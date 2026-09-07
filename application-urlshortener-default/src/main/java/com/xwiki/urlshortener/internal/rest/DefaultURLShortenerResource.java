@@ -101,8 +101,13 @@ public class DefaultURLShortenerResource implements URLShortenerResource
             EntityReference docRef = solrEntityReferenceResolver.resolve(result, EntityType.DOCUMENT);
             XWikiContext xcontext = xcontextProvider.get();
             XWikiDocument doc = xcontext.getWiki().getDocument(docRef, xcontext);
+            // Check the view right on the document before emitting the redirect. Return 404 to avoid revealing
+            // whether the page exists or not.
+            if (!authorization.hasAccess(Right.VIEW, doc.getDocumentReference())) {
+                throw new WebApplicationException(Response.Status.NOT_FOUND);
+            }
+
             String stringURL = doc.getURL("view", xcontext);
-            // Let the redirect action to check the view right on the document.
             xcontext.getResponse().sendRedirect(stringURL);
 
             return Response.status(301).build();

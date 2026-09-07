@@ -31,6 +31,8 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.query.QueryException;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
+import org.xwiki.security.authorization.ContextualAuthorizationManager;
+import org.xwiki.security.authorization.Right;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
@@ -62,6 +64,9 @@ public class URLShortenerResourceReferenceHandlerTest
 
     @MockComponent
     private URLShortenerManager urlShortenerManager;
+
+    @MockComponent
+    private ContextualAuthorizationManager authorization;
 
     @Mock
     private XWikiContext xcontext;
@@ -97,6 +102,7 @@ public class URLShortenerResourceReferenceHandlerTest
         DocumentReference documentReference = new DocumentReference(wikiId, "Space", "Page");
 
         when(urlShortenerManager.getDocumentReference(wikiId, pageId)).thenReturn(documentReference);
+        when(authorization.hasAccess(Right.VIEW, documentReference)).thenReturn(true);
 
         String docURL = "docURL";
         when(xwiki.getURL(eq(documentReference), any(String.class), any(String.class), any(String.class),
@@ -118,6 +124,26 @@ public class URLShortenerResourceReferenceHandlerTest
         String wikiId = "test";
 
         when(urlShortenerManager.getDocumentReference(pageId, wikiId)).thenReturn(null);
+
+        URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
+        resourceReferenceHandler.handle(resourceReference, handlerChain);
+
+        verify(httpServletServletResponse, times(0)).sendRedirect(any(String.class));
+        verify(httpServletServletResponse, times(1)).sendError(404,
+            String.format("No document is associated to the given ID: [%s]", resourceReference.getPageId()));
+        verify(handlerChain, times(1)).handleNext(resourceReference);
+    }
+
+    @Test
+    void handleWithoutViewAccess() throws Exception
+    {
+        String pageId = "123";
+        String wikiId = "test";
+
+        DocumentReference documentReference = new DocumentReference(wikiId, "Space", "Page");
+
+        when(urlShortenerManager.getDocumentReference(wikiId, pageId)).thenReturn(documentReference);
+        when(authorization.hasAccess(Right.VIEW, documentReference)).thenReturn(false);
 
         URLShortenerResourceReference resourceReference = new URLShortenerResourceReference(wikiId, pageId);
         resourceReferenceHandler.handle(resourceReference, handlerChain);
