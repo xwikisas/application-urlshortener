@@ -41,6 +41,7 @@ import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
+import org.xwiki.resource.annotations.Authenticate;
 import org.xwiki.security.authorization.ContextualAuthorizationManager;
 import org.xwiki.security.authorization.Right;
 
@@ -57,6 +58,7 @@ import com.xwiki.urlshortener.URLShortenerManager;
 @Component
 @Named(URLShortenerResourceReference.HINT)
 @Singleton
+@Authenticate
 public class URLShortenerResourceReferenceHandler extends AbstractResourceReferenceHandler<ResourceType>
 {
     /**
