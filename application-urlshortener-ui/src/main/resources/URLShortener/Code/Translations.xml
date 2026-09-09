@@ -54,6 +54,9 @@ urlshortener.conflicts.regenerate.inprogress=Updating short URL...
 urlshortener.conflicts.regenerate.done=Short URL updated
 urlshortener.conflicts.regenerate.fail=Something went wrong
 urlshortener.conflicts.regenerate.fail.unauthorized=Insufficient rights
+
+urlshortener.doesnotexist.title=Short URL unavailable
+urlshortener.doesnotexist.message=The short URL with ID {0} could not be found, or you do not have permission to access it.
 </content>
   <object>
     <name>URLShortener.Code.Translations</name>
