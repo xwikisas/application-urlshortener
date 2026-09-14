@@ -19,6 +19,7 @@
  */
 package com.xwiki.urlshortener.internal;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -67,9 +68,19 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
     public static final String PAGE_ID = "pageID";
 
     /**
-     * No document is associated to the given ID.
+     * View action.
      */
-    public static final String NO_DOCUMENT = "No document is associated to the given ID: [%s]";
+    private static final String VIEW_ACTION = "view";
+
+    /**
+     * Application parent space.
+     */
+    private static final String URLSHORTENER_SPACE = "URLShortener";
+
+    /**
+     * The name of the page shown when the shortened URL cannot be resolved to a document the user is allowed to view.
+     */
+    private static final String DOCUMENT_DOES_NOT_EXIST_PAGE = "DocumentDoesNotExist";
 
     @Inject
     private Provider<XWikiContext> xcontextProvider;
@@ -93,31 +104,27 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
     public void handle(ResourceReference reference, ResourceReferenceHandlerChain chain)
         throws ResourceReferenceHandlerException
     {
-        HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
+            HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
             URLShortenerResourceReference urlResourceReference = (URLShortenerResourceReference) reference;
+            XWikiContext xcontext = xcontextProvider.get();
+
             DocumentReference documentReference =
                 urlShortenerManager.getDocumentReference(urlResourceReference.getWikiId(),
                     urlResourceReference.getPageId());
-            if (null != documentReference) {
-                XWikiContext xcontext = xcontextProvider.get();
-                // Check the view right on the document before emitting the redirect. Return 404 to avoid revealing
-                // whether the document exists or not.
-                if (!authorization.hasAccess(Right.VIEW, documentReference)) {
-                    response.sendError(404, String.format(NO_DOCUMENT, urlResourceReference.getPageId()));
-                    chain.handleNext(reference);
-                    return;
-                }
+            if (null == documentReference) {
+                redirectToDocumentDoesNotExist(response, xcontext, urlResourceReference);
+            } else if (!authorization.hasAccess(Right.VIEW, documentReference)) {
+                redirectUnauthorized(response, xcontext, urlResourceReference);
+            } else {
                 // Preserve query parameters from the shortened URL request.
                 String queryString = URLEncodedUtils.format(urlResourceReference.getParameters().entrySet().stream()
                     .flatMap(
                         entry -> entry.getValue().stream().map(value -> new BasicNameValuePair(entry.getKey(), value)))
                     .collect(Collectors.toList()), StandardCharsets.UTF_8);
 
-                String stringURL = xcontext.getWiki().getURL(documentReference, "view", queryString, "", xcontext);
+                String stringURL = xcontext.getWiki().getURL(documentReference, VIEW_ACTION, queryString, "", xcontext);
                 response.sendRedirect(stringURL);
-            } else {
-                response.sendError(404, String.format(NO_DOCUMENT, urlResourceReference.getPageId()));
             }
         } catch (Exception e) {
             throw new ResourceReferenceHandlerException(
@@ -125,5 +132,50 @@ public class URLShortenerResourceReferenceHandler extends AbstractResourceRefere
         }
 
         chain.handleNext(reference);
+    }
+
+    /**
+     * Redirect an authenticated user without view rights, or a guest, to the appropriate page without leaking the
+     * existence of the target document.
+     */
+    private void redirectUnauthorized(HttpServletResponse response, XWikiContext xcontext,
+        URLShortenerResourceReference reference) throws Exception
+    {
+        if (null == xcontext.getUserReference()) {
+            // A guest user is sent to the login page, keeping the shortened URL as the login redirect target.
+            redirectToLogin(response, xcontext, resolveWikiId(reference));
+        } else {
+            // An authenticated user without view rights is redirected to a generic error page.
+            redirectToDocumentDoesNotExist(response, xcontext, reference);
+        }
+    }
+
+    private void redirectToDocumentDoesNotExist(HttpServletResponse response, XWikiContext xcontext,
+        URLShortenerResourceReference reference) throws Exception
+    {
+        DocumentReference documentDoesNotExist =
+            new DocumentReference(resolveWikiId(reference), URLSHORTENER_SPACE, DOCUMENT_DOES_NOT_EXIST_PAGE);
+        String queryString = "shortURLID=" + reference.getPageId();
+        response.sendRedirect(xcontext.getWiki().getURL(documentDoesNotExist, VIEW_ACTION, queryString, "", xcontext));
+    }
+
+    private void redirectToLogin(HttpServletResponse response, XWikiContext xcontext, String wikiId) throws Exception
+    {
+        // Keep the shortened URL as the login redirect target.
+        String shortURL = xcontext.getRequest().getRequestURL().toString();
+        String queryString = xcontext.getRequest().getQueryString();
+        if (null != queryString) {
+            shortURL += "?" + queryString;
+        }
+        DocumentReference loginReference = new DocumentReference(wikiId, "XWiki", "XWikiLogin");
+        String loginURL = xcontext.getWiki()
+            .getURL(loginReference, "login", "xredirect=" + URLEncoder.encode(shortURL, StandardCharsets.UTF_8), "",
+                xcontext);
+        response.sendRedirect(loginURL);
+    }
+
+    private String resolveWikiId(URLShortenerResourceReference reference)
+    {
+        return reference.getWikiId().isEmpty() ? xcontextProvider.get().getWikiId() : reference.getWikiId();
     }
 }
