@@ -42,6 +42,26 @@ public class URLShortenerPage extends ViewPage
         return getDriver().findElementWithoutWaiting(By.id(id));
     }
 
+    /**
+     * Replace the browser clipboard with a fake one. The Clipboard API is only available in secure contexts (HTTPS or
+     * localhost), which is not the case for the Docker test browser, so the real one would always fail.
+     */
+    public void mockClipboard()
+    {
+        getDriver().executeJavascript("window.ClipboardItem = function(items) { this.items = items; };"
+            + "Object.defineProperty(navigator, 'clipboard', {configurable: true, value: {write: items =>"
+            + " Promise.resolve(items[0].items['text/plain']).then(text => { window.copiedText = text; })}});");
+    }
+
+    /**
+     * @return the text written to the clipboard mocked by {@link #mockClipboard()}
+     */
+    public String getCopiedText()
+    {
+        getDriver().waitUntilJavascriptCondition("return !!window.copiedText");
+        return (String) getDriver().executeJavascript("return window.copiedText");
+    }
+
     public boolean isErrorNotificationDisplayed()
     {
         try {

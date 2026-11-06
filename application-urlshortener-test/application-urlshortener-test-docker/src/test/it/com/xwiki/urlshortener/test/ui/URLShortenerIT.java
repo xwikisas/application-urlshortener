@@ -31,20 +31,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Functional tests for the URL Shortener Application. Because the text is not actually saved on clipboard in the
- * functional tests, we only check that the button is present and no error is displayed. The reason for the limitation
- * is that the navigator.clipboard.writeText API requires the clipboardWrite permission for actually saving text to
- * clipboard, but this is not present in this context.
+ * Functional tests for the URL Shortener Application. The Clipboard API is not available in the test browser (the wiki
+ * is not served from a secure context), so the clipboard is mocked.
  *
  * @version $Id$
- * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText#browser_compatibility">Browser
- *     compatibility explanation</a>
  * @since 1.0
  */
 @UITest(extraJARs = {
     // The Solr store is not ready yet to be installed as extension
     "org.xwiki.platform:xwiki-platform-eventstream-store-solr:15.10",
-    "org.xwiki.platform:xwiki-platform-search-solr-query:15.10" })
+    "org.xwiki.platform:xwiki-platform-search-solr-query:15.10"})
 class URLShortenerIT
 {
     @Test
@@ -59,11 +55,13 @@ class URLShortenerIT
 
         testUtils.createPage(testReference, "");
         URLShortenerPage page = new URLShortenerPage();
+        page.mockClipboard();
 
         WebElement urlShortenerButton = page.getURLShortenerButton();
         assertTrue(urlShortenerButton.isDisplayed());
 
         urlShortenerButton.click();
+        assertTrue(page.getCopiedText().contains("/short/"));
         assertFalse(page.isErrorNotificationDisplayed());
     }
 
@@ -74,11 +72,13 @@ class URLShortenerIT
 
         testUtils.createPage(testReference, "");
         URLShortenerPage page = new URLShortenerPage();
+        page.mockClipboard();
 
         WebElement urlShortenerButton = page.getURLShortenerButton();
         assertTrue(urlShortenerButton.isDisplayed());
 
         urlShortenerButton.click();
+        assertTrue(page.getCopiedText().contains("/short/"));
         assertFalse(page.isErrorNotificationDisplayed());
     }
 }
