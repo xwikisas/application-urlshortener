@@ -100,7 +100,7 @@ public class URLShortenerScriptService implements ScriptService
      * @throws URLShortenerException if the searching process failed or if the user does not have view rights on the
      *     page.
      */
-    DocumentReference getDocumentReference(String wiki, String id) throws URLShortenerException
+    public DocumentReference getDocumentReference(String wiki, String id) throws URLShortenerException
     {
         DocumentReference documentReference = urlShortenerManager.getDocumentReference(wiki, id);
         try {
