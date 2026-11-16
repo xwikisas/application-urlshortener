@@ -93,6 +93,9 @@ public class DefaultURLShortenerManager implements URLShortenerManager
         try {
             XWikiContext xcontext = xcontextProvider.get();
             XWikiDocument currentDoc = xcontext.getWiki().getDocument(documentReference, xcontext);
+            if (currentDoc.isNew()) {
+                throw new IllegalStateException("Document does not exist.");
+            }
             return addURLShortenerXObject(currentDoc.clone());
         } catch (XWikiException | QueryException e) {
             this.logger.error(

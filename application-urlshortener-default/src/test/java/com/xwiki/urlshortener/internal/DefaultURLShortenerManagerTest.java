@@ -129,6 +129,20 @@ public class DefaultURLShortenerManagerTest
     }
 
     /**
+     * Test the case where the document does not exist, so it must not be created.
+     */
+    @Test
+    void createShortenedURLOnMissingDocument() throws Exception
+    {
+        DocumentReference currentDocRef = new DocumentReference("wiki", "A", "B");
+        when(xwiki.getDocument(currentDocRef, xcontext)).thenReturn(document);
+        when(document.isNew()).thenReturn(true);
+
+        assertThrows(IllegalStateException.class, () -> this.urlShortenerManager.createShortenedURL(currentDocRef));
+        verify(xwiki, never()).saveDocument(any(XWikiDocument.class), anyString(), anyBoolean(), eq(xcontext));
+    }
+
+    /**
      * Test the case where there isn't any URLShortener object, so the page ID needs to be computed.
      */
     @Test

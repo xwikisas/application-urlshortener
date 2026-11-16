@@ -123,17 +123,17 @@ public class DefaultURLShortenerResource implements URLShortenerResource
         XWikiContext xcontext = xcontextProvider.get();
         DocumentReference documentReference = documentReferenceResolver.resolve(currentDocRef);
 
+        if (!authorization.hasAccess(Right.VIEW, documentReference)) {
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+
         if (!xcontext.getWiki().exists(documentReference, xcontext)) {
             return Response.status(Response.Status.NOT_FOUND).type(MediaType.APPLICATION_JSON).build();
         }
 
-        if (authorization.hasAccess(Right.VIEW, documentReference)) {
-            String pageID = urlShortenerManager.createShortenedURL(documentReference);
+        String pageID = urlShortenerManager.createShortenedURL(documentReference);
 
-            return Response.ok().entity(Map.of(PAGE_ID, pageID)).type(MediaType.APPLICATION_JSON).build();
-        } else {
-            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        }
+        return Response.ok().entity(Map.of(PAGE_ID, pageID)).type(MediaType.APPLICATION_JSON).build();
     }
 
     @Override

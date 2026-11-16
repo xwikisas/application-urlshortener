@@ -76,14 +76,14 @@ public class URLShortenerScriptService implements ScriptService
      * @param oldPageID the pageID, associated to the given document reference, to be replaced, as {@code String}.
      * @return the new unique identifier associated to the xwiki page.
      * @throws IllegalStateException if the passed document reference does not have the old id associated.
-     * @throws URLShortenerException if the user does not have view rights on the page or if the regeneration
+     * @throws URLShortenerException if the user does not have edit rights on the page or if the regeneration
      *     process fails.
      */
     public String regenerateShortenedURL(DocumentReference documentReference, String oldPageID)
         throws IllegalStateException, URLShortenerException
     {
         try {
-            contextualAuthorizationManager.checkAccess(Right.VIEW, documentReference);
+            contextualAuthorizationManager.checkAccess(Right.EDIT, documentReference);
         } catch (AccessDeniedException e) {
             throw new URLShortenerException(
                 String.format("Can't regenerate shortened url for page [%s].", documentReference), e);
